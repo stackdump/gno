@@ -1,5 +1,10 @@
 package home
 
+import (
+	//"github.com/gnolang/gno/examples/gno.land/p/pflow/metamodel"
+	"gno.land/p/pflow/metamodel"
+)
+
 const back = `
 [Back](./home)
 `
@@ -13,8 +18,10 @@ Check out my latest thoughts on software design, blockchain, and Petri nets at [
 
 Or, see what I'm working on lately at [github.com/stackdump](https://github.com/stackdump).
 
-## Projects
+## Pages
 * [pflow.xyz](?pflow) - Build State Machines Visually
+* [svg](?svg) - Export your state machine to SVG
+* [html](?html) - Export your state machine to HTML
 `
 
 const pflow = `
@@ -29,8 +36,24 @@ Click on the above diagram to open in the pflow editor.
 or read the [docs](https://pflow.dev/docs).
 ` + back
 
+const svgHeader = `
+### SVG
+Export your state machine to SVG.
+`
+
+const htmlHeader = `
+### HTML
+Export your state machine to HTML.
+`
+
 func Render(path string) string {
 	switch path {
+	case "?svg":
+		m := metamodel.NewPflow()
+		return "```\n" + m.ToSVG() + "\n```"
+	case "?html":
+		m := metamodel.NewPflow()
+		return "```\n" + m.ToHTML() + "\n```"
 	case "?pflow":
 		return pflow
 	default:
