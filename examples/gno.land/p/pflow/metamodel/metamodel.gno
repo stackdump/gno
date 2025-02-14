@@ -4,18 +4,18 @@ import (
 	"gno.land/p/demo/ufmt"
 )
 
-const VERSION = "v0"
-const PETRI_NET = "petriNet"
-
 func Sprint(v interface{}) string {
 	return ufmt.Sprintf("%v", v)
 }
 
+// Value is a type alias for int64.
+type Value = int64 // REVIEW: could this be a generic type in gnolang?
+
 type Place struct {
 	Label    string
 	Offset   int
-	Initial  *int
-	Capacity *int
+	Initial  Value
+	Capacity Value
 	X        int
 	Y        int
 }
@@ -31,62 +31,37 @@ type Transition struct {
 type Arrow struct {
 	Source  string
 	Target  string
-	Weight  *int
-	Consume *bool
-	Produce *bool
-	Inhibit *bool
-	Read    *bool
+	Weight  Value
+	Consume bool
+	Produce bool
+	Inhibit bool
+	Read    bool
 }
 
 type Pflow struct {
-	ModelType   string
-	Version     string
 	Places      map[string]Place
 	Transitions map[string]Transition
 	Arcs        []Arrow
 }
 
 type StateMachine struct {
-	Model Pflow
-	State map[string]int
-	Rates map[string]int // rates of firing transitions - only useful for simulation
+	Model *Pflow
+	State map[string]Value
 }
 
-func NewStateMachine(m Pflow) StateMachine {
-	return StateMachine{Model: m, State: setState(m), Rates: setRates(m)}
+func NewStateMachine(m *Pflow) StateMachine {
+	return StateMachine{Model: m, State: setState(m)}
 }
 
-func setRates(m Pflow) map[string]int {
-	rates := make(map[string]int)
-	for label := range m.Transitions {
-		rates[label] = 1 // default rate every transition is 1 == 100% rate of firing
-	}
-	return rates
-}
-
-func setState(m Pflow) map[string]int {
-	state := make(map[string]int)
+func setState(m *Pflow) map[string]Value {
+	state := make(map[string]Value)
 	for label, place := range m.Places {
-		if place.Initial == nil {
-			state[label] = 0
-		} else {
-			state[label] = *place.Initial
-		}
+		state[label] = place.Initial
 	}
 	return state
 }
 
-func (sm *StateMachine) SetRates(rates map[string]int) {
-	for label, rate := range rates {
-		if _, ok := sm.Model.Transitions[label]; ok {
-			sm.Rates[label] = rate
-		} else {
-			panic("Transition %s not found in the model\n" + label)
-		}
-	}
-}
-
-func (sm *StateMachine) SetState(state map[string]int) {
+func (sm *StateMachine) SetState(state map[string]Value) {
 	for label := range sm.Model.Places {
 		if _, ok := state[label]; !ok {
 			panic("Place" + label + "not found in the state\n")
@@ -95,57 +70,46 @@ func (sm *StateMachine) SetState(state map[string]int) {
 	sm.State = state
 }
 
-func (sm *StateMachine) Transform(action string, multiple int) bool {
-	newState := make(map[string]int)
+func (sm *StateMachine) Transform(action string, multiple Value) bool {
+	if multiple < 0 {
+		return false
+	}
+	_, ok := sm.Model.Transitions[action]
+	if !ok {
+		return false
+	}
+	newState := make(map[string]Value)
 	for k, v := range sm.State {
 		newState[k] = v
 	}
 
 	for _, arc := range sm.Model.Arcs {
 		if arc.Target == action {
-			newState[arc.Source] -= *arc.Weight * multiple
+			newState[arc.Source] -= arc.Weight * multiple
 			if newState[arc.Source] < 0 {
 				return false
 			}
 		} else if arc.Source == action {
-			newState[arc.Target] += *arc.Weight * multiple
+			newState[arc.Target] += arc.Weight * multiple
 		}
 	}
 	sm.State = newState
 	return true
 }
 
-func NewPflow() Pflow {
-	return Pflow{ModelType: PETRI_NET, Version: VERSION, Places: make(map[string]Place), Transitions: make(map[string]Transition), Arcs: []Arrow{}}
+func NewPflow() *Pflow {
+	return &Pflow{Places: make(map[string]Place), Transitions: make(map[string]Transition), Arcs: []Arrow{}}
 }
 
-func (net *Pflow) AddPlace(label string, offset, initial, capacity, x, y *int) {
-	if offset == nil {
-		offset = new(int)
-		*offset = len(net.Transitions)
-	}
-	net.Places[label] = Place{Label: label, Offset: *offset, Initial: initial, Capacity: capacity, X: *x, Y: *y}
+func (net *Pflow) Place(label string, initial Value, capacity Value, x, y int) {
+	net.Places[label] = Place{Label: label, Offset: len(net.Places), Initial: initial, Capacity: capacity, X: x, Y: y}
 }
 
-func (net *Pflow) AddTransition(label string, offset *int, role string, x, y int) {
-	if offset == nil {
-		offset = new(int)
-		*offset = len(net.Transitions)
-	}
-	net.Transitions[label] = Transition{Label: label, Offset: *offset, Role: role, X: x, Y: y}
+func (net *Pflow) Transition(label string, role string, x, y int) {
+	net.Transitions[label] = Transition{Label: label, Offset: len(net.Transitions), Role: role, X: x, Y: y}
 }
 
-func (net *Pflow) AddArc(source, target string, weight *int) {
-	_, sourceExists := net.Places[source]
-	_, targetExists := net.Places[target]
-
-	consume := sourceExists && targetExists
-	produce := targetExists && sourceExists
-
-	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: &consume, Produce: &produce, Inhibit: new(bool), Read: new(bool)})
-}
-
-func (net *Pflow) AddGuard(source, target string, weight *int) {
+func (net *Pflow) Arrow(source, target string, weight Value) {
 	consume := false
 	produce := false
 
@@ -160,30 +124,45 @@ func (net *Pflow) AddGuard(source, target string, weight *int) {
 	if sourceIsTransition && targetIsPlace {
 		produce = true
 	}
-	inhibit := true
-	read := sourceIsTransition && targetIsPlace
-	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: &consume, Produce: &produce, Inhibit: &inhibit, Read: &read})
+
+	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: false, Read: false})
+}
+
+func (net *Pflow) Guard(source, target string, weight Value) {
+	consume := false
+	produce := false
+	read := false
+
+	_, sourceIsPlace := net.Places[source]
+	_, targetIsPlace := net.Places[target]
+	_, sourceIsTransition := net.Transitions[source]
+	_, targetIsTransition := net.Transitions[target]
+
+	if sourceIsPlace && targetIsTransition {
+		consume = true
+	}
+	if sourceIsTransition && targetIsPlace {
+		produce = true
+		read = true
+	}
+	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: true, Read: read})
 }
 
 type Display struct {
 	Buffer string
-	Model  Pflow
+	Model  *Pflow
+	State  map[string]Value
 }
 
-func NewDisplay(model Pflow) Display {
-	return Display{Model: model}
+func NewDisplay(model *Pflow, state ...map[string]Value) Display {
+	if len(state) == 1 {
+		return Display{Model: model, State: state[0]}
+	}
+	return Display{Model: model, State: make(map[string]Value)}
 }
 
-func (d *Display) NewSVGImage(width, height *int) {
-	w := 400
-	h := 400
-	if width != nil {
-		w = *width
-	}
-	if height != nil {
-		h = *height
-	}
-	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\" viewBox=\"0 0 " + Sprint(w) + " " + Sprint(h) + "\">"
+func (d *Display) NewSVGImage(w, h int) {
+	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" w=\"100%\" h=\"100%\" viewBox=\"0 0 " + Sprint(w) + " " + Sprint(h) + "\">"
 	d.Rect(0, 0, w, h, "fill=\"#ffffff\"")
 	d.WriteDefs()
 }
@@ -228,9 +207,9 @@ func (d *Display) PlaceElement(label string, place Place) {
 	d.Text(place.X-18, place.Y-20, label, "font-size=\"small\"")
 	x := place.X
 	y := place.Y
-	tokens := 0
-	if place.Initial != nil {
-		tokens = *place.Initial
+	tokens := place.Initial
+	if state, ok := d.State[label]; ok {
+		tokens = state
 	}
 	if tokens > 0 {
 		if tokens == 1 {
@@ -247,14 +226,14 @@ func (d *Display) PlaceElement(label string, place Place) {
 func (d *Display) ArcElement(arc Arrow) {
 	d.Group()
 	marker := "url(#markerArrow1)"
-	if *arc.Inhibit {
+	if arc.Inhibit {
 		marker = "url(#markerInhibit1)"
 	}
 	extra := "stroke=\"#000000\" fill=\"#000000\" marker-end=\"" + marker + "\""
 
 	var p Place
 	var t Transition
-	if *arc.Inhibit {
+	if arc.Inhibit {
 		if place, ok := d.Model.Places[arc.Source]; ok {
 			p = place
 			t = d.Model.Transitions[arc.Target]
@@ -278,10 +257,7 @@ func (d *Display) ArcElement(arc Arrow) {
 		d.Line(p.X, p.Y, t.X, t.Y, extra)
 		midX := (p.X + t.X) / 2
 		midY := (p.Y+t.Y)/2 - 8
-		weight := 1
-		if arc.Weight != nil {
-			weight = *arc.Weight
-		}
+		weight := arc.Weight
 		d.Text(midX-4, midY+4, Sprint(weight), "font-size=\"small\"")
 	} else {
 		p = d.Model.Places[arc.Target]
@@ -289,10 +265,7 @@ func (d *Display) ArcElement(arc Arrow) {
 		d.Line(t.X, t.Y, p.X, p.Y, extra)
 		midX := (t.X + p.X) / 2
 		midY := (t.Y+p.Y)/2 - 8
-		weight := 1
-		if arc.Weight != nil {
-			weight = *arc.Weight
-		}
+		weight := arc.Weight
 		d.Text(midX-4, midY+4, Sprint(weight), "font-size=\"small\"")
 	}
 	d.Gend()
@@ -315,8 +288,7 @@ func (d *Display) ToHTML() string {
 	return "<!DOCTYPE html><html><body>" + d.Buffer + "</body></html>"
 }
 
-func (net Pflow) ToHTML() string {
-	d := NewDisplay(net)
+func (net *Pflow) GetLimits() (int, int) {
 	maxX := 0
 	maxY := 0
 	for _, p := range net.Places {
@@ -335,16 +307,29 @@ func (net Pflow) ToHTML() string {
 			maxY = t.Y
 		}
 	}
-	maxX += 100
-	maxY += 100
-	d.NewSVGImage(&maxX, &maxY)
+	return maxX, maxY
+}
+
+func (net *Pflow) ToHTML(state ...map[string]Value) string {
+	s := make(map[string]Value)
+	if len(state) == 1 {
+		s = state[0]
+	}
+	d := NewDisplay(net, s)
+	maxX, maxY := net.GetLimits()
+	d.NewSVGImage(maxX, maxY)
 	d.Render()
 	return d.ToHTML()
 }
 
-func (net Pflow) ToSVG() string {
-	d := NewDisplay(net)
-	d.NewSVGImage(nil, nil)
+func (net *Pflow) ToSVG(state ...map[string]Value) string {
+	s := make(map[string]Value)
+	if len(state) == 1 {
+		s = state[0]
+	}
+	d := NewDisplay(net, s)
+	maxX, maxY := net.GetLimits()
+	d.NewSVGImage(maxX, maxY)
 	d.Render()
 	return d.Buffer
 }
@@ -367,4 +352,62 @@ func (d *Display) Line(x1, y1, x2, y2 int, extra string) {
 
 func (d *Display) Group() {
 	d.WriteElement("<g>")
+}
+
+// ToJson returns a JSON representation of the Petri net model.
+// Open the JSON with https://pflow.xyz/editor to interact with the state machine.
+func (net *Pflow) ToJson() (string, error) {
+	jsonStr := "{"
+	jsonStr += "\"modelType\":\"petriNet\","
+	jsonStr += "\"version\":\"v0\","
+	jsonStr += "\"places\":{"
+	first := true
+	for label, place := range net.Places {
+		if !first {
+			jsonStr += ","
+		}
+		first = false
+		jsonStr += "\"" + label + "\":{"
+		jsonStr += "\"offset\":" + Sprint(place.Offset) + ","
+		jsonStr += "\"initial\":" + Sprint(place.Initial) + ","
+		jsonStr += "\"capacity\":" + Sprint(place.Capacity) + ","
+		jsonStr += "\"x\":" + Sprint(place.X) + ","
+		jsonStr += "\"y\":" + Sprint(place.Y)
+		jsonStr += "}"
+	}
+	jsonStr += "},"
+	jsonStr += "\"transitions\":{"
+	first = true
+	for label, transition := range net.Transitions {
+		if !first {
+			jsonStr += ","
+		}
+		first = false
+		jsonStr += "\"" + label + "\":{"
+		jsonStr += "\"x\":" + Sprint(transition.X) + ","
+		jsonStr += "\"y\":" + Sprint(transition.Y)
+		jsonStr += "}"
+	}
+	jsonStr += "},"
+	jsonStr += "\"arcs\":["
+	first = true
+	for _, arc := range net.Arcs {
+		if !first {
+			jsonStr += ","
+		}
+		first = false
+		jsonStr += "{"
+		jsonStr += "\"source\":\"" + arc.Source + "\","
+		jsonStr += "\"target\":\"" + arc.Target + "\""
+		if arc.Weight != 0 {
+			jsonStr += ",\"weight\":" + Sprint(arc.Weight)
+		}
+		if arc.Inhibit {
+			jsonStr += ",\"inhibit\":true"
+		}
+		jsonStr += "}"
+	}
+	jsonStr += "]"
+	jsonStr += "}"
+	return jsonStr, nil
 }
