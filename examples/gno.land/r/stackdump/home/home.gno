@@ -4,7 +4,7 @@ import (
 	mm "gno.land/p/pflow/metamodel"
 )
 
-const indexHeader = `
+const intro = `
 # Stackdump
 
 Hi, I’m Matt York—engineer, blockchain researcher, and creator of pflow.xyz, a Petri-net SDK for modeling complex systems.
@@ -14,7 +14,9 @@ Hi, I’m Matt York—engineer, blockchain researcher, and creator of pflow.xyz,
 Check out my latest thoughts on software design, blockchain, and Petri nets at [blog.stackdump.com](https://blog.stackdump.com).
 
 Or, see what I'm working on lately at [github.com/stackdump](https://github.com/stackdump).
+`
 
+const libraries = `
 ## Libraries
 
 ### [/p/pflow/metamodel](/p/pflow/metamodel)
@@ -81,7 +83,8 @@ func exampleModel() *mm.Pflow {
 var m = exampleModel()
 
 func Render(path string) string {
-	return indexHeader +
+	return intro +
+		libraries +
 		"#### ToMarkdown()\n - export the model as markdown image \n" +
 		"- rendered as svg using [https://pflow.dev/img/?b=&lt;Base64&gt;](https://pflow.dev)" +
 		"\n\n" + m.ToMarkdown() + "\n\n" +

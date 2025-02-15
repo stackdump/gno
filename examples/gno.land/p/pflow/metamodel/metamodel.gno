@@ -440,5 +440,6 @@ func (net *Pflow) ToBase64() string {
 }
 
 func (net *Pflow) ToMarkdown() string {
-	return "![Petri-net](https://pflow.dev/img/?b=" + net.ToBase64() + ")"
+	data := net.ToBase64()
+	return "[![Petri-net](https://pflow.dev/img/?b=" + data + ")](https://pflow.dev/?b=" + data + ")"
 }
