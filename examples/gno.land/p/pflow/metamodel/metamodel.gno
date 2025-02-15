@@ -1,122 +1,152 @@
 package metamodel
 
 import (
+	"encoding/base64"
 	"gno.land/p/demo/ufmt"
 )
 
-func Sprint(v interface{}) string {
+// sprint is a helper function to convert values to string.
+func sprint(v interface{}) string {
 	return ufmt.Sprintf("%v", v)
 }
 
-// Value is a type alias for int64.
-type Value = int64 // REVIEW: could this be a generic type in gnolang?
+// TokenType is a type alias for int64. It is used to represent the number of tokens in a place.
+type TokenType = int64
 
+// Place represents a place (circle) in the Petri net.
 type Place struct {
-	Label    string
-	Offset   int
-	Initial  Value
-	Capacity Value
-	X        int
-	Y        int
+	Label    string    // Label of the place.
+	Offset   int       // Offset of the place in the Petri net. (used for ordering)
+	Initial  TokenType // Initial number of tokens in the place
+	Capacity TokenType // Maximum capacity of the place 0=Unlimited
+	X        int       // X coordinate of the place
+	Y        int       // Y coordinate of the place
 }
 
+// Transition represents a transition (rectangle) in the Petri net.
 type Transition struct {
-	Label  string
-	Offset int
-	Role   string
-	X      int
-	Y      int
+	Label  string // Label of the transition.
+	Offset int    // Offset of the transition in the Petri net. (used for ordering)
+	Role   string // Role of the transition.
+	X      int    // X coordinate of the transition
+	Y      int    // Y coordinate of the transition
 }
 
+// Arrow represents an arrow (arc) in the Petri net.
 type Arrow struct {
-	Source  string
-	Target  string
-	Weight  Value
-	Consume bool
-	Produce bool
-	Inhibit bool
-	Read    bool
+	Source  string    // Source place or transition
+	Target  string    // Target place or transition
+	Weight  TokenType // Weight of the arrow
+	Consume bool      // Consume bool indicates if the arrow consumes tokens
+	Produce bool      // Produce bool indicates if the arrow produces tokens
+	Inhibit bool      // Inhibit bool indicates if the arrow inhibits the transition
+	Read    bool      // Read bool indicates if the arrow reads the place
 }
 
+// Pflow represents a Petri net model.
 type Pflow struct {
-	Places      map[string]Place
-	Transitions map[string]Transition
-	Arcs        []Arrow
+	Places      map[string]Place      // Map of places in the Petri net
+	Transitions map[string]Transition // Map of transitions in the Petri net
+	Arrows      []Arrow               // List of arrows (Arcs) in the Petri net
 }
 
+// StateMachine represents a state machine for the Petri net.
 type StateMachine struct {
-	Model *Pflow
-	State map[string]Value
+	Model *Pflow               // Petri net model
+	State map[string]TokenType // Current state of the Petri net
 }
 
+// NewStateMachine creates a new state machine for the given Petri net model.
 func NewStateMachine(m *Pflow) StateMachine {
-	return StateMachine{Model: m, State: setState(m)}
+	return StateMachine{Model: m, State: initialState(m)}
 }
 
-func setState(m *Pflow) map[string]Value {
-	state := make(map[string]Value)
+// initialState initializes the state of the Petri net model.
+func initialState(m *Pflow) map[string]TokenType {
+	state := make(map[string]TokenType)
 	for label, place := range m.Places {
 		state[label] = place.Initial
 	}
 	return state
 }
 
-func (sm *StateMachine) SetState(state map[string]Value) {
-	for label := range sm.Model.Places {
-		if _, ok := state[label]; !ok {
-			panic("Place" + label + "not found in the state\n")
-		}
+// Transform applies an action to the state machine and returns true if successful.
+func (sm *StateMachine) Transform(action string, multiple ...TokenType) bool {
+	m := TokenType(1)
+	if len(multiple) == 1 {
+		m = multiple[0]
 	}
-	sm.State = state
-}
-
-func (sm *StateMachine) Transform(action string, multiple Value) bool {
-	if multiple < 0 {
-		return false
-	}
-	_, ok := sm.Model.Transitions[action]
+	newState, ok := transformWithState(sm.State, sm.Model, action, m)
 	if !ok {
 		return false
 	}
-	newState := make(map[string]Value)
-	for k, v := range sm.State {
+	for k, v := range newState {
+		sm.State[k] = v
+	}
+	return true
+}
+
+// transformWithState applies an action to the given state and returns the new state and a boolean indicating success.
+func transformWithState(state map[string]TokenType, model *Pflow, action string, multiple TokenType) (map[string]TokenType, bool) {
+	if multiple <= 0 {
+		return state, false
+	}
+	_, ok := model.Transitions[action]
+	if !ok {
+		return state, false
+	}
+	newState := make(map[string]TokenType)
+	for k, v := range state {
 		newState[k] = v
 	}
-
-	for _, arc := range sm.Model.Arcs {
+	for _, arc := range model.Arrows {
 		if arc.Target == action {
 			newState[arc.Source] -= arc.Weight * multiple
-			if newState[arc.Source] < 0 {
-				return false
+			if newState[arc.Source] < 0 { // check for underflow
+				return state, false
 			}
 		} else if arc.Source == action {
 			newState[arc.Target] += arc.Weight * multiple
 		}
 	}
-	sm.State = newState
-	return true
+	// check for overflow
+	for _, place := range model.Places {
+		if newState[place.Label] > place.Capacity {
+			return state, false
+		}
+	}
+	return newState, true
 }
 
+// NewPflow creates a new Petri net model.
 func NewPflow() *Pflow {
-	return &Pflow{Places: make(map[string]Place), Transitions: make(map[string]Transition), Arcs: []Arrow{}}
+	return &Pflow{Places: make(map[string]Place), Transitions: make(map[string]Transition), Arrows: []Arrow{}}
 }
 
-func (net *Pflow) Place(label string, initial Value, capacity Value, x, y int) {
+// Place adds a place to the Petri net model.
+func (net *Pflow) Place(label string, initial TokenType, capacity TokenType, x, y int) {
 	net.Places[label] = Place{Label: label, Offset: len(net.Places), Initial: initial, Capacity: capacity, X: x, Y: y}
 }
 
+// Transition adds a transition to the Petri net model.
 func (net *Pflow) Transition(label string, role string, x, y int) {
 	net.Transitions[label] = Transition{Label: label, Offset: len(net.Transitions), Role: role, X: x, Y: y}
 }
 
-func (net *Pflow) Arrow(source, target string, weight Value) {
-	consume := false
-	produce := false
-
+// arrowPrams checks if the source and target are valid for an arrow.
+func (net *Pflow) arrowPrams(source, target string) (consume, produce bool) {
 	_, sourceIsPlace := net.Places[source]
 	_, targetIsPlace := net.Places[target]
 	_, sourceIsTransition := net.Transitions[source]
 	_, targetIsTransition := net.Transitions[target]
+
+	if sourceIsPlace && sourceIsTransition {
+		panic("source cannot be both a place and a transition")
+	}
+
+	if targetIsPlace && targetIsTransition {
+		panic("target cannot be both a place and a transition")
+	}
 
 	if sourceIsPlace && targetIsTransition {
 		consume = true
@@ -124,49 +154,44 @@ func (net *Pflow) Arrow(source, target string, weight Value) {
 	if sourceIsTransition && targetIsPlace {
 		produce = true
 	}
-
-	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: false, Read: false})
+	return
 }
 
-func (net *Pflow) Guard(source, target string, weight Value) {
-	consume := false
-	produce := false
-	read := false
-
-	_, sourceIsPlace := net.Places[source]
-	_, targetIsPlace := net.Places[target]
-	_, sourceIsTransition := net.Transitions[source]
-	_, targetIsTransition := net.Transitions[target]
-
-	if sourceIsPlace && targetIsTransition {
-		consume = true
-	}
-	if sourceIsTransition && targetIsPlace {
-		produce = true
-		read = true
-	}
-	net.Arcs = append(net.Arcs, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: true, Read: read})
+// Add methods to add places, transitions, and arrows to the Petri net model.
+func (net *Pflow) Arrow(source, target string, weight TokenType) {
+	consume, produce := net.arrowPrams(source, target)
+	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: false, Read: false})
 }
 
+// Guard adds a guard to the Petri net model.
+func (net *Pflow) Guard(source, target string, weight TokenType) {
+	consume, produce := net.arrowPrams(source, target)
+	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: true, Read: produce})
+}
+
+// Display represents the SVG display of the Petri net model.
 type Display struct {
 	Buffer string
 	Model  *Pflow
-	State  map[string]Value
+	State  map[string]TokenType
 }
 
-func NewDisplay(model *Pflow, state ...map[string]Value) Display {
+// NewDisplay creates a new display for the given Petri net model and state.
+func NewDisplay(model *Pflow, state ...map[string]TokenType) Display {
 	if len(state) == 1 {
 		return Display{Model: model, State: state[0]}
 	}
-	return Display{Model: model, State: make(map[string]Value)}
+	return Display{Model: model, State: make(map[string]TokenType)}
 }
 
+// NewSVGImage creates a new SVG image with the given width and height.
 func (d *Display) NewSVGImage(w, h int) {
-	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" w=\"100%\" h=\"100%\" viewBox=\"0 0 " + Sprint(w) + " " + Sprint(h) + "\">"
+	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" w=\"100%\" h=\"100%\" viewBox=\"0 0 " + sprint(w) + " " + sprint(h) + "\">"
 	d.Rect(0, 0, w, h, "fill=\"#ffffff\"")
 	d.WriteDefs()
 }
 
+// WriteDefs writes the SVG definitions for the display.
 func (d *Display) WriteDefs() {
 	d.Buffer += "<defs>" +
 		"<marker id=\"markerArrow1\" markerWidth=\"23\" markerHeight=\"13\" refX=\"31\" refY=\"6\" orient=\"auto\">" +
@@ -180,16 +205,19 @@ func (d *Display) WriteDefs() {
 		"</defs>"
 }
 
+// Group starts a new group in the SVG.
 func (d *Display) Gend() {
 	d.WriteElement("</g>")
 }
 
+// WriteElement writes an element to the SVG buffer.
 func (d *Display) WriteElement(element string) {
 	d.Buffer += element
 }
 
+// Render renders the Petri net model to SVG.
 func (d *Display) Render() {
-	for _, arc := range d.Model.Arcs {
+	for _, arc := range d.Model.Arrows {
 		d.ArcElement(arc)
 	}
 	for label, place := range d.Model.Places {
@@ -201,6 +229,7 @@ func (d *Display) Render() {
 	d.EndSVG()
 }
 
+// PlaceElement renders a place element in the SVG.
 func (d *Display) PlaceElement(label string, place Place) {
 	d.Group()
 	d.Circle(place.X, place.Y, 16, "stroke-width=\"1.5\" fill=\"#ffffff\" stroke=\"#000000\"")
@@ -215,14 +244,15 @@ func (d *Display) PlaceElement(label string, place Place) {
 		if tokens == 1 {
 			d.Circle(x, y, 2, "fill=\"#000000\" stroke=\"#000000\"")
 		} else if tokens < 10 {
-			d.Text(x-4, y+5, Sprint(tokens), "font-size=\"large\"")
+			d.Text(x-4, y+5, sprint(tokens), "font-size=\"large\"")
 		} else {
-			d.Text(x-7, y+5, Sprint(tokens), "font-size=\"small\"")
+			d.Text(x-7, y+5, sprint(tokens), "font-size=\"small\"")
 		}
 	}
 	d.Gend()
 }
 
+// ArcElement renders an arc element in the SVG.
 func (d *Display) ArcElement(arc Arrow) {
 	d.Group()
 	marker := "url(#markerArrow1)"
@@ -258,7 +288,7 @@ func (d *Display) ArcElement(arc Arrow) {
 		midX := (p.X + t.X) / 2
 		midY := (p.Y+t.Y)/2 - 8
 		weight := arc.Weight
-		d.Text(midX-4, midY+4, Sprint(weight), "font-size=\"small\"")
+		d.Text(midX-4, midY+4, sprint(weight), "font-size=\"small\"")
 	} else {
 		p = d.Model.Places[arc.Target]
 		t = d.Model.Transitions[arc.Source]
@@ -266,11 +296,12 @@ func (d *Display) ArcElement(arc Arrow) {
 		midX := (t.X + p.X) / 2
 		midY := (t.Y+p.Y)/2 - 8
 		weight := arc.Weight
-		d.Text(midX-4, midY+4, Sprint(weight), "font-size=\"small\"")
+		d.Text(midX-4, midY+4, sprint(weight), "font-size=\"small\"")
 	}
 	d.Gend()
 }
 
+// TransitionElement renders a transition element in the SVG.
 func (d *Display) TransitionElement(label string, transition Transition) {
 	d.Group()
 	x := transition.X - 17
@@ -280,14 +311,12 @@ func (d *Display) TransitionElement(label string, transition Transition) {
 	d.Gend()
 }
 
+// EndSVG ends the SVG image.
 func (d *Display) EndSVG() {
 	d.Buffer += "</svg>"
 }
 
-func (d *Display) ToHTML() string {
-	return "<!DOCTYPE html><html><body>" + d.Buffer + "</body></html>"
-}
-
+// GetLimits returns the maximum X and Y coordinates of the places and transitions in the Petri net model.
 func (net *Pflow) GetLimits() (int, int) {
 	maxX := 0
 	maxY := 0
@@ -310,20 +339,9 @@ func (net *Pflow) GetLimits() (int, int) {
 	return maxX, maxY
 }
 
-func (net *Pflow) ToHTML(state ...map[string]Value) string {
-	s := make(map[string]Value)
-	if len(state) == 1 {
-		s = state[0]
-	}
-	d := NewDisplay(net, s)
-	maxX, maxY := net.GetLimits()
-	d.NewSVGImage(maxX, maxY)
-	d.Render()
-	return d.ToHTML()
-}
-
-func (net *Pflow) ToSVG(state ...map[string]Value) string {
-	s := make(map[string]Value)
+// ToSVG returns the SVG representation of the Petri net model.
+func (net *Pflow) ToSVG(state ...map[string]TokenType) string {
+	s := make(map[string]TokenType)
 	if len(state) == 1 {
 		s = state[0]
 	}
@@ -334,29 +352,34 @@ func (net *Pflow) ToSVG(state ...map[string]Value) string {
 	return d.Buffer
 }
 
+// Rect draws a rectangle in the SVG.
 func (d *Display) Rect(x, y, width, height int, extra string) {
-	d.WriteElement("<rect x=\"" + Sprint(x) + "\" y=\"" + Sprint(y) + "\" width=\"" + Sprint(width) + "\" height=\"" + Sprint(height) + "\" " + extra + " />")
+	d.WriteElement("<rect x=\"" + sprint(x) + "\" y=\"" + sprint(y) + "\" width=\"" + sprint(width) + "\" height=\"" + sprint(height) + "\" " + extra + " />")
 }
 
+// Circle draws a circle in the SVG.
 func (d *Display) Circle(x, y, radius int, extra string) {
-	d.WriteElement("<circle cx=\"" + Sprint(x) + "\" cy=\"" + Sprint(y) + "\" r=\"" + Sprint(radius) + "\" " + extra + " />")
+	d.WriteElement("<circle cx=\"" + sprint(x) + "\" cy=\"" + sprint(y) + "\" r=\"" + sprint(radius) + "\" " + extra + " />")
 }
 
+// Text draws text in the SVG.
 func (d *Display) Text(x, y int, txt, extra string) {
-	d.WriteElement("<text x=\"" + Sprint(x) + "\" y=\"" + Sprint(y) + "\" " + extra + ">" + txt + "</text>")
+	d.WriteElement("<text x=\"" + sprint(x) + "\" y=\"" + sprint(y) + "\" " + extra + ">" + txt + "</text>")
 }
 
+// Line draws a line in the SVG.
 func (d *Display) Line(x1, y1, x2, y2 int, extra string) {
-	d.WriteElement("<line x1=\"" + Sprint(x1) + "\" y1=\"" + Sprint(y1) + "\" x2=\"" + Sprint(x2) + "\" y2=\"" + Sprint(y2) + "\" " + extra + " />")
+	d.WriteElement("<line x1=\"" + sprint(x1) + "\" y1=\"" + sprint(y1) + "\" x2=\"" + sprint(x2) + "\" y2=\"" + sprint(y2) + "\" " + extra + " />")
 }
 
+// Group starts a new group in the SVG.
 func (d *Display) Group() {
 	d.WriteElement("<g>")
 }
 
 // ToJson returns a JSON representation of the Petri net model.
 // Open the JSON with https://pflow.xyz/editor to interact with the state machine.
-func (net *Pflow) ToJson() (string, error) {
+func (net *Pflow) ToJson() string {
 	jsonStr := "{"
 	jsonStr += "\"modelType\":\"petriNet\","
 	jsonStr += "\"version\":\"v0\","
@@ -368,11 +391,11 @@ func (net *Pflow) ToJson() (string, error) {
 		}
 		first = false
 		jsonStr += "\"" + label + "\":{"
-		jsonStr += "\"offset\":" + Sprint(place.Offset) + ","
-		jsonStr += "\"initial\":" + Sprint(place.Initial) + ","
-		jsonStr += "\"capacity\":" + Sprint(place.Capacity) + ","
-		jsonStr += "\"x\":" + Sprint(place.X) + ","
-		jsonStr += "\"y\":" + Sprint(place.Y)
+		jsonStr += "\"offset\":" + sprint(place.Offset) + ","
+		jsonStr += "\"initial\":" + sprint(place.Initial) + ","
+		jsonStr += "\"capacity\":" + sprint(place.Capacity) + ","
+		jsonStr += "\"x\":" + sprint(place.X) + ","
+		jsonStr += "\"y\":" + sprint(place.Y)
 		jsonStr += "}"
 	}
 	jsonStr += "},"
@@ -384,14 +407,14 @@ func (net *Pflow) ToJson() (string, error) {
 		}
 		first = false
 		jsonStr += "\"" + label + "\":{"
-		jsonStr += "\"x\":" + Sprint(transition.X) + ","
-		jsonStr += "\"y\":" + Sprint(transition.Y)
+		jsonStr += "\"x\":" + sprint(transition.X) + ","
+		jsonStr += "\"y\":" + sprint(transition.Y)
 		jsonStr += "}"
 	}
 	jsonStr += "},"
 	jsonStr += "\"arcs\":["
 	first = true
-	for _, arc := range net.Arcs {
+	for _, arc := range net.Arrows {
 		if !first {
 			jsonStr += ","
 		}
@@ -400,7 +423,7 @@ func (net *Pflow) ToJson() (string, error) {
 		jsonStr += "\"source\":\"" + arc.Source + "\","
 		jsonStr += "\"target\":\"" + arc.Target + "\""
 		if arc.Weight != 0 {
-			jsonStr += ",\"weight\":" + Sprint(arc.Weight)
+			jsonStr += ",\"weight\":" + sprint(arc.Weight)
 		}
 		if arc.Inhibit {
 			jsonStr += ",\"inhibit\":true"
@@ -409,5 +432,13 @@ func (net *Pflow) ToJson() (string, error) {
 	}
 	jsonStr += "]"
 	jsonStr += "}"
-	return jsonStr, nil
+	return jsonStr
+}
+
+func (net *Pflow) ToBase64() string {
+	return base64.StdEncoding.EncodeToString([]byte(net.ToJson()))
+}
+
+func (net *Pflow) ToMarkdown() string {
+	return "![Petri-net](https://pflow.dev/img/?b=" + net.ToBase64() + ")"
 }

@@ -11,14 +11,14 @@ func Sprint(v interface{}) string {
 }
 
 var cities = []string{
-	"Invalid+City",
-	"New+York", "Los+Angeles", "Chicago", "Houston", "Phoenix",
-	"Philadelphia", "San+Antonio", "San+Diego", "Dallas", "San+Jose", "Austin", "Virtual",
+	"Invalid City",
+	"New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
+	"Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Virtual",
 }
 
 var organizers = []string{
-	"Invalid+Organizer",
-	"Build+The+Future", "Foo", "Bar", "Tech+Innovators", "Event+Masters",
+	"Invalid Organizer",
+	"Build The Future", "Foo", "Bar", "Tech Innovators", "Event Masters",
 }
 
 var exampleUrls = []string{
@@ -150,17 +150,48 @@ func (er *EventRequest) ToJson() (string, error) {
 	return jsonStr, nil
 }
 
+const intro = `Request For Event Sample Memo Format
+
+Try the following example URLs:
+`
+
+// mdLink returns a markdown link
+func mdLink(text, url string) string {
+	return "\n[" + text + "](./rfe" + url + ")"
+}
+
+func showEvent(er *EventRequest) string {
+	out, _ := er.ToJson()
+	return "```json\n" + out + "\n```"
+}
+
 func Render(path string) string {
+
 	out := ""
 
-	for i, url := range exampleUrls {
-		er := NewEventRequest(url)
-		er.FromPath(url)
+	if len(path) == 0 {
+		out += " # Examples\n"
+
+		for i, rawUrl := range exampleUrls {
+			url := strings.ReplaceAll(rawUrl, "+", " ")
+			out += "Example " + Sprint(i) + "\n"
+			out += mdLink(rawUrl, rawUrl) + "\n"
+
+			er := NewEventRequest(url)
+			er.FromPath(url)
+			er.Validate()
+			out += showEvent(er) + "\n"
+		}
+	} else {
+		out += "Event Found in Path: \n"
+		url := strings.ReplaceAll(path, " ", "+")
+		out += mdLink(url, url) + "\n"
+
+		er := NewEventRequest(path)
+		er.FromPath(path)
 		er.Validate()
-		json, _ := er.ToJson()
-		out += "Example " + Sprint(i) + "\n"
-		out += "```\n" + url + "\n```\n"
-		out += "```\n" + json + "\n```\n"
+		out += showEvent(er) + "\n"
+
 	}
 
 	return out

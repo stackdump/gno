@@ -4,18 +4,12 @@ import (
 	mm "gno.land/p/pflow/metamodel"
 )
 
-const back = `
-[Back](./home)
-`
-
-const modelPreview = `
-[![pflow](https://pflow.dev/img/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb.svg)](https://pflow.dev/p/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb/)
-`
-
 const indexHeader = `
 # Stackdump
 
 Hi, I’m Matt York—engineer, blockchain researcher, and creator of pflow.xyz, a Petri-net SDK for modeling complex systems.
+
+![Matt York](https://bafybeien3ahzdauw2c24xq3yraxlcfaqzv2zu7o35sw4cwcx55hl2s6eem.ipfs.dweb.link/)
 
 Check out my latest thoughts on software design, blockchain, and Petri nets at [blog.stackdump.com](https://blog.stackdump.com).
 
@@ -23,46 +17,9 @@ Or, see what I'm working on lately at [github.com/stackdump](https://github.com/
 
 ## Libraries
 
-### Pflow Metamodel - [gno.land/p/pflow/metamodel](/p/pflow/metamodel)
-`
+### [gno.land/p/pflow/metamodel](/p/pflow/metamodel)
 
-const index = indexHeader + modelPreview +
-	"```\n" + exampleSource + "\n```\n" +
-	menu
-
-const menu = `
-* [pflow.xyz](?pflow) - Build State Machines Visually
-* [svg](?svg) - Export your state machine to SVG
-* [html](?html) - Export your state machine to HTML
-* [json](?json) - Export your state machine as Json (compatible with  [pflow.xyz/editor](https://pflow.xyz/editor))
-`
-
-const pflow = `
-### Pflow.xyz
-
-Build State Machines Visually -- and convert to source code. (gnolang templating coming soon).
-
-[![pflow](https://pflow.dev/img/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb.svg)](https://pflow.dev/p/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb/)
-
-Click on the above diagram to open in the pflow editor.
-
-or read the [docs](https://pflow.dev/docs).
-` + back
-
-const svgHeader = `
-### SVG
-Export your state machine to SVG.
-`
-
-const htmlHeader = `
-### HTML
-Export your state machine to HTML.
-`
-
-const jsonHeader = `
-### JSON
-[![pflow](https://pflow.dev/img/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb.svg)](https://pflow.dev/p/zb2rhbzaEAGY4L6SpmAByfdYr6jt945NmNY6zVZ1mWHK8Jjcb/)
-Copy the json below and paste it into the editor at [pflow.xyz/editor](https://pflow.xyz/editor) to interact with the state machine.
+Pflow metamodel is a Gno library for modeling Petri nets. It provides a simple API for defining places, transitions, and arrows, and can export the model as a markdown image or JSON.
 `
 
 const exampleSource = `
@@ -71,6 +28,12 @@ import (
 )
 
 ...
+// predefine model
+var m = exampleModel()
+
+// Use m.ToMarkdown() to embed the petri net in markdown
+// ![Petri-net](https://pflow.dev/img/b=<BASE64DATA>
+_ := m.ToMarkdownImage()
 
 // define petri net model using metamodel package
 func exampleModel() *mm.Pflow {
@@ -84,7 +47,7 @@ func exampleModel() *mm.Pflow {
 			"txn2": {X: 43, Y: 307},
 			"txn3": {X: 235, Y: 306},
 		},
-		Arcs: []mm.Arrow{
+		Arrows: []mm.Arrow{
 			{Source: "txn0", Target: "place0"},
 			{Source: "place0", Target: "txn1", Weight: 3},
 			{Source: "txn2", Target: "place0", Weight: 3, Inhibit: true},
@@ -106,11 +69,11 @@ func exampleModel() *mm.Pflow {
 			"txn2": {X: 43, Y: 307},
 			"txn3": {X: 235, Y: 306},
 		},
-		Arcs: []mm.Arrow{
-			{Source: "txn0", Target: "place0"},
+		Arrows: []mm.Arrow{
+			{Source: "txn0", Target: "place0", Weight: 1},
 			{Source: "place0", Target: "txn1", Weight: 3},
 			{Source: "txn2", Target: "place0", Weight: 3, Inhibit: true},
-			{Source: "place0", Target: "txn3", Inhibit: true},
+			{Source: "place0", Target: "txn3", Weight: 1, Inhibit: true, Read: true},
 		},
 	}
 }
@@ -118,17 +81,11 @@ func exampleModel() *mm.Pflow {
 var m = exampleModel()
 
 func Render(path string) string {
-	switch path {
-	case "?json":
-		json, _ := m.ToJson()
-		return jsonHeader + "```\n" + json + "\n```"
-	case "?svg":
-		return svgHeader + "```\n" + m.ToSVG() + "\n```"
-	case "?html":
-		return htmlHeader + "```\n" + m.ToHTML() + "\n```"
-	case "?pflow":
-		return pflow
-	default:
-		return index
-	}
+	return indexHeader +
+		"### ToMarkdown()\n export as markdown image" +
+		"\n\n" + m.ToMarkdown() + "\n\n" +
+		" Notice above: /p/pflow/metamodel is used to visualize the embedded state machine. \n\n\n" +
+		"### ToJson()\n export model as json" +
+		"\n\n```\n" + m.ToJson() + "\n```\n\n" +
+		"### Source \n\n Review the Gnolang source below for this state machine. \n\n```go\n" + exampleSource + "\n```\n"
 }
