@@ -17,9 +17,10 @@ Or, see what I'm working on lately at [github.com/stackdump](https://github.com/
 
 ## Libraries
 
-### [gno.land/p/pflow/metamodel](/p/pflow/metamodel)
+### [/p/pflow/metamodel](/p/pflow/metamodel)
 
-Pflow metamodel is a Gno library for modeling Petri nets. It provides a simple API for defining places, transitions, and arrows, and can export the model as a markdown image or JSON.
+- [Pflow metamodel](/p/pflow/metamodel) is a Gno library for modeling Petri nets. 
+- It provides a simple API for defining places, transitions, and arrows, and can export the model as a markdown image or JSON.
 `
 
 const exampleSource = `
@@ -27,8 +28,7 @@ import (
 	mm "gno.land/p/pflow/metamodel"
 )
 
-...
-// predefine model
+// define model
 var m = exampleModel()
 
 // Use m.ToMarkdown() to embed the petri net in markdown
@@ -82,10 +82,11 @@ var m = exampleModel()
 
 func Render(path string) string {
 	return indexHeader +
-		"### ToMarkdown()\n export as markdown image" +
+		"#### ToMarkdown()\n - export the model as markdown image \n" +
+		"- rendered as svg using [https://pflow.dev/img/?b=&lt;Base64&gt;](https://pflow.dev)" +
 		"\n\n" + m.ToMarkdown() + "\n\n" +
-		" Notice above: /p/pflow/metamodel is used to visualize the embedded state machine. \n\n\n" +
-		"### ToJson()\n export model as json" +
-		"\n\n```\n" + m.ToJson() + "\n```\n\n" +
-		"### Source \n\n Review the Gnolang source below for this state machine. \n\n```go\n" + exampleSource + "\n```\n"
+		"#### ToJson()\n - export the model as json\n - json can be edited using [https://pflow.dev/editor](https://pflow.dev/editor)" +
+		"\n\n```json\n" + m.ToJson() + "\n```\n\n" +
+		"#### Pflow Model \n\n Review the Gnolang source below for this state machine. \n\n" +
+		"```go\n" + exampleSource + "\n```\n"
 }
