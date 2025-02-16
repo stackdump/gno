@@ -76,7 +76,7 @@ func (sm *StateMachine) Transform(action string, multiple ...TokenType) bool {
 	if len(multiple) == 1 {
 		m = multiple[0]
 	}
-	newState, ok := transformWithState(sm.State, sm.Model, action, m)
+	newState, ok := Execute(sm.State, sm.Model, action, m)
 	if !ok {
 		return false
 	}
@@ -86,8 +86,8 @@ func (sm *StateMachine) Transform(action string, multiple ...TokenType) bool {
 	return true
 }
 
-// transformWithState applies an action to the given state and returns the new state and a boolean indicating success.
-func transformWithState(state map[string]TokenType, model *Pflow, action string, multiple TokenType) (map[string]TokenType, bool) {
+// Execute applies an action to the given state and returns the new state and a boolean indicating success.
+func Execute(state map[string]TokenType, model *Pflow, action string, multiple TokenType) (map[string]TokenType, bool) {
 	if multiple <= 0 {
 		return state, false
 	}
