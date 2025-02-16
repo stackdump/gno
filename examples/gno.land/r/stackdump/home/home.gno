@@ -33,9 +33,9 @@ import (
 // define model
 var m = exampleModel()
 
-// Use m.ToMarkdown() to embed the petri net in markdown
+// Use m.ToLinkMarkdown() to embed the petri net in markdown
 // ![Petri-net](https://pflow.dev/img/b=<BASE64DATA>
-_ := m.ToMarkdownImage()
+_ := m.ToLinkMarkdown()
 
 // define petri net model using metamodel package
 func exampleModel() *mm.Pflow {
@@ -75,7 +75,7 @@ func exampleModel() *mm.Pflow {
 			{Source: "txn0", Target: "place0", Weight: 1},
 			{Source: "place0", Target: "txn1", Weight: 3},
 			{Source: "txn2", Target: "place0", Weight: 3, Inhibit: true},
-			{Source: "place0", Target: "txn3", Weight: 1, Inhibit: true, Read: true},
+			{Source: "place0", Target: "txn3", Weight: 1, Inhibit: true},
 		},
 	}
 }
@@ -83,13 +83,19 @@ func exampleModel() *mm.Pflow {
 var m = exampleModel()
 
 func Render(path string) string {
+	image := m.ToImageMarkdown()
 	return intro +
 		libraries +
-		"#### ToMarkdown()\n - export the model as markdown image \n" +
+		"#### ToLinkMarkdown()\n - export the model as markdown image \n" +
 		"- rendered as svg using [https://pflow.dev/img/?b=&lt;Base64&gt;](https://pflow.dev)" +
-		"\n\n" + m.ToMarkdown() + "\n\n" +
+		"\n\n" + m.ToLinkMarkdown() + "\n\n" +
 		"#### ToJson()\n - export the model as json\n - json can be edited using [https://pflow.dev/editor](https://pflow.dev/editor)" +
 		"\n\n```json\n" + m.ToJson() + "\n```\n\n" +
+		"#### ToSvg()\n - draw the model as an Svg image\n - save to file an open with browser or any Svg compatible program" +
+		"\n\n```svg\n" + m.ToSvg() + "\n```\n\n" +
+		"#### ToImageMardown()\n - export the model as a data URL\n - copy and paste into an <img> tag" +
+		"\n\n" + image + "\n\n" +
+		"\n\n```\n" + image + "\n```\n\n" +
 		"#### Pflow Model \n\n Review the Gnolang source below for this state machine. \n\n" +
 		"```go\n" + exampleSource + "\n```\n"
 }

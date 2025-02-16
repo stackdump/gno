@@ -40,7 +40,6 @@ type Arrow struct {
 	Consume bool      // Consume bool indicates if the arrow consumes tokens
 	Produce bool      // Produce bool indicates if the arrow produces tokens
 	Inhibit bool      // Inhibit bool indicates if the arrow inhibits the transition
-	Read    bool      // Read bool indicates if the arrow reads the place
 }
 
 // Pflow represents a Petri net model.
@@ -160,16 +159,16 @@ func (net *Pflow) arrowPrams(source, target string) (consume, produce bool) {
 // Add methods to add places, transitions, and arrows to the Petri net model.
 func (net *Pflow) Arrow(source, target string, weight TokenType) {
 	consume, produce := net.arrowPrams(source, target)
-	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: false, Read: false})
+	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: false})
 }
 
 // Guard adds a guard to the Petri net model.
 func (net *Pflow) Guard(source, target string, weight TokenType) {
 	consume, produce := net.arrowPrams(source, target)
-	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: true, Read: produce})
+	net.Arrows = append(net.Arrows, Arrow{Source: source, Target: target, Weight: weight, Consume: consume, Produce: produce, Inhibit: true})
 }
 
-// Display represents the SVG display of the Petri net model.
+// Display represents the Svg display of the Petri net model.
 type Display struct {
 	Buffer string
 	Model  *Pflow
@@ -184,14 +183,14 @@ func NewDisplay(model *Pflow, state ...map[string]TokenType) Display {
 	return Display{Model: model, State: make(map[string]TokenType)}
 }
 
-// NewSVGImage creates a new SVG image with the given width and height.
-func (d *Display) NewSVGImage(w, h int) {
-	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" w=\"100%\" h=\"100%\" viewBox=\"0 0 " + sprint(w) + " " + sprint(h) + "\">"
+// NewSvgImage creates a new Svg image with the given width and height.
+func (d *Display) NewSvgImage(w, h int) {
+	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + sprint(w) + " " + sprint(h) + "\">"
 	d.Rect(0, 0, w, h, "fill=\"#ffffff\"")
 	d.WriteDefs()
 }
 
-// WriteDefs writes the SVG definitions for the display.
+// WriteDefs writes the Svg definitions for the display.
 func (d *Display) WriteDefs() {
 	d.Buffer += "<defs>" +
 		"<marker id=\"markerArrow1\" markerWidth=\"23\" markerHeight=\"13\" refX=\"31\" refY=\"6\" orient=\"auto\">" +
@@ -205,17 +204,17 @@ func (d *Display) WriteDefs() {
 		"</defs>"
 }
 
-// Group starts a new group in the SVG.
+// Group starts a new group in the Svg.
 func (d *Display) Gend() {
 	d.WriteElement("</g>")
 }
 
-// WriteElement writes an element to the SVG buffer.
+// WriteElement writes an element to the Svg buffer.
 func (d *Display) WriteElement(element string) {
 	d.Buffer += element
 }
 
-// Render renders the Petri net model to SVG.
+// Render renders the Petri net model to Svg.
 func (d *Display) Render() {
 	for _, arc := range d.Model.Arrows {
 		d.ArcElement(arc)
@@ -226,10 +225,10 @@ func (d *Display) Render() {
 	for label, transition := range d.Model.Transitions {
 		d.TransitionElement(label, transition)
 	}
-	d.EndSVG()
+	d.EndSvg()
 }
 
-// PlaceElement renders a place element in the SVG.
+// PlaceElement renders a place element in the Svg.
 func (d *Display) PlaceElement(label string, place Place) {
 	d.Group()
 	d.Circle(place.X, place.Y, 16, "stroke-width=\"1.5\" fill=\"#ffffff\" stroke=\"#000000\"")
@@ -252,7 +251,7 @@ func (d *Display) PlaceElement(label string, place Place) {
 	d.Gend()
 }
 
-// ArcElement renders an arc element in the SVG.
+// ArcElement renders an arc element in the Svg.
 func (d *Display) ArcElement(arc Arrow) {
 	d.Group()
 	marker := "url(#markerArrow1)"
@@ -301,7 +300,7 @@ func (d *Display) ArcElement(arc Arrow) {
 	d.Gend()
 }
 
-// TransitionElement renders a transition element in the SVG.
+// TransitionElement renders a transition element in the Svg.
 func (d *Display) TransitionElement(label string, transition Transition) {
 	d.Group()
 	x := transition.X - 17
@@ -311,12 +310,13 @@ func (d *Display) TransitionElement(label string, transition Transition) {
 	d.Gend()
 }
 
-// EndSVG ends the SVG image.
-func (d *Display) EndSVG() {
+// EndSvg ends the Svg image.
+func (d *Display) EndSvg() {
 	d.Buffer += "</svg>"
 }
 
 // GetLimits returns the maximum X and Y coordinates of the places and transitions in the Petri net model.
+// Adds additional 100 to the maxX and maxY to avoid clipping
 func (net *Pflow) GetLimits() (int, int) {
 	maxX := 0
 	maxY := 0
@@ -336,43 +336,43 @@ func (net *Pflow) GetLimits() (int, int) {
 			maxY = t.Y
 		}
 	}
-	return maxX, maxY
+	return maxX + 100, maxY + 100
 }
 
-// ToSVG returns the SVG representation of the Petri net model.
-func (net *Pflow) ToSVG(state ...map[string]TokenType) string {
+// ToSvg returns the Svg representation of the Petri net model.
+func (net *Pflow) ToSvg(state ...map[string]TokenType) string {
 	s := make(map[string]TokenType)
 	if len(state) == 1 {
 		s = state[0]
 	}
 	d := NewDisplay(net, s)
 	maxX, maxY := net.GetLimits()
-	d.NewSVGImage(maxX, maxY)
+	d.NewSvgImage(maxX, maxY)
 	d.Render()
 	return d.Buffer
 }
 
-// Rect draws a rectangle in the SVG.
+// Rect draws a rectangle in the Svg.
 func (d *Display) Rect(x, y, width, height int, extra string) {
 	d.WriteElement("<rect x=\"" + sprint(x) + "\" y=\"" + sprint(y) + "\" width=\"" + sprint(width) + "\" height=\"" + sprint(height) + "\" " + extra + " />")
 }
 
-// Circle draws a circle in the SVG.
+// Circle draws a circle in the Svg.
 func (d *Display) Circle(x, y, radius int, extra string) {
 	d.WriteElement("<circle cx=\"" + sprint(x) + "\" cy=\"" + sprint(y) + "\" r=\"" + sprint(radius) + "\" " + extra + " />")
 }
 
-// Text draws text in the SVG.
+// Text draws text in the Svg.
 func (d *Display) Text(x, y int, txt, extra string) {
 	d.WriteElement("<text x=\"" + sprint(x) + "\" y=\"" + sprint(y) + "\" " + extra + ">" + txt + "</text>")
 }
 
-// Line draws a line in the SVG.
+// Line draws a line in the Svg.
 func (d *Display) Line(x1, y1, x2, y2 int, extra string) {
 	d.WriteElement("<line x1=\"" + sprint(x1) + "\" y1=\"" + sprint(y1) + "\" x2=\"" + sprint(x2) + "\" y2=\"" + sprint(y2) + "\" " + extra + " />")
 }
 
-// Group starts a new group in the SVG.
+// Group starts a new group in the Svg.
 func (d *Display) Group() {
 	d.WriteElement("<g>")
 }
@@ -439,7 +439,19 @@ func (net *Pflow) ToBase64() string {
 	return base64.StdEncoding.EncodeToString([]byte(net.ToJson()))
 }
 
-func (net *Pflow) ToMarkdown() string {
+func (net *Pflow) ToJsonDataUrl() string {
+	return "data:text/json;base64," + net.ToBase64()
+}
+
+func (net *Pflow) ToSvgDataUrl() string {
+	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(net.ToSvg()))
+}
+
+func (net *Pflow) ToImageMarkdown() string {
+	return "![Petri-net](" + net.ToSvgDataUrl() + ")"
+}
+
+func (net *Pflow) ToLinkMarkdown() string {
 	data := net.ToBase64()
 	return "[![Petri-net](https://pflow.dev/img/?b=" + data + ")](https://pflow.dev/?b=" + data + ")"
 }
