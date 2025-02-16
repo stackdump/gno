@@ -11,13 +11,13 @@ func Sprint(v interface{}) string {
 }
 
 var cities = []string{
-	"Invalid City",
+	"Any City",
 	"New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
 	"Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Virtual",
 }
 
 var organizers = []string{
-	"Invalid Organizer",
+	"Any Organizer",
 	"Build The Future", "Foo", "Bar", "Tech Innovators", "Event Masters",
 }
 
@@ -54,11 +54,16 @@ func NewEventRequest(url string) *EventRequest {
 	er.Organizers = []string{}
 	er.Dates = []string{}
 	er.Bid = "0"
+	er.FromPath(url)
 	return er
 }
 
 // FromPath parse the query string and populate the EventRequest
 func (er *EventRequest) FromPath(path string) {
+	// remove leading from path
+	if strings.HasPrefix(path, "?") {
+		path = path[1:]
+	}
 	params := strings.Split(path, "&")
 	for _, param := range params {
 		kv := strings.Split(param, "=")
@@ -157,7 +162,12 @@ Try the following example URLs:
 
 // mdLink returns a markdown link
 func mdLink(text, url string) string {
-	return "\n[" + text + "](./rfe" + url + ")"
+	text = strings.ReplaceAll(text, "+", " ")
+	url = strings.ReplaceAll(url, " ", "+")
+	if strings.HasPrefix(url, "&") {
+		url = "?" + url[1:]
+	}
+	return "[" + text + "](" + url + ")"
 }
 
 func showEvent(er *EventRequest) string {
@@ -166,33 +176,28 @@ func showEvent(er *EventRequest) string {
 }
 
 func Render(path string) string {
-
-	out := ""
-
-	if len(path) == 0 {
-		out += " # Examples\n"
-
-		for i, rawUrl := range exampleUrls {
-			url := strings.ReplaceAll(rawUrl, "+", " ")
-			out += "Example " + Sprint(i) + "\n"
-			out += mdLink(rawUrl, rawUrl) + "\n"
-
-			er := NewEventRequest(url)
-			er.FromPath(url)
-			er.Validate()
-			out += showEvent(er) + "\n"
-		}
-	} else {
-		out += "Event Found in Path: \n"
-		url := strings.ReplaceAll(path, " ", "+")
-		out += mdLink(url, url) + "\n"
-
-		er := NewEventRequest(path)
-		er.FromPath(path)
-		er.Validate()
-		out += showEvent(er) + "\n"
-
+	out := mdLink("Restart", "?") + "\n\n"
+	// make links for each city
+	for _, city := range cities {
+		out += " - " + mdLink(city, path+"&city="+city)
 	}
+	out += "\n"
+	// make links for each organizer
+	for _, organizer := range organizers {
+		out += " - " + mdLink(organizer, path+"&organizer="+organizer)
+	}
+
+	out += "\n"
+	// make links to compose data select year, month day
+	out += " - " + mdLink("Range", path+"&date=2025-00-00..2025-00-00") + "\n"
+	out += " - " + mdLink("2025", path+"&date=2025-00-00") + "\n"
+	// TODO: detect empty date and compose links for each day of the month
+
+	out += " ### Event Request\n"
+
+	er := NewEventRequest(path)
+	er.Validate()
+	out += showEvent(er) + "\n"
 
 	return out
 }
