@@ -68,27 +68,39 @@ func NewDateField(path, value string) string {
 	out := ""
 	// REVIEW: no format check
 	y, m, d := date[:4], date[5:7], date[8:]
-	out += "|" + y + "-" + m + "-" + d + "|"
+	out += "|" + y + "-" + m + "-" + d + "|\n\n"
+	flag := false
 	if y == "0000" {
+		flag = true
+		yearStr := ""
 		for i := startDate; i <= endDate; i++ {
-			uri := replaceQueryVar(path, value, "date="+sprint(i)+"-00-00")
-			out += mdLink(sprint(i), uri) + "-"
+			uri := replaceQueryVar(path, value, "date="+sprint(i)+"-"+m+"-"+d)
+			yearStr += mdLink(sprint(i), uri) + "-"
 		}
-		return removeTrailing(out, "-")
+		//removeTrailing(out, "-")
+		out += removeTrailing(yearStr, "-") + "\n\n"
 	}
 	if m == "00" {
+		flag = true
+		monthStr := ""
 		for i := 1; i <= 12; i++ {
-			uri := replaceQueryVar(path, value, "date="+y+"-"+lpad(i, 2)+"-00")
-			out += mdLink(months[i], uri) + "-"
+			uri := replaceQueryVar(path, value, "date="+y+"-"+lpad(i, 2)+"-"+d)
+			monthStr += mdLink(months[i], uri) + "-"
 		}
-		return removeTrailing(out, "-")
+		out += removeTrailing(monthStr, "-") + "\n\n"
+		//removeTrailing(out, "-")
 	}
 	if d == "00" {
+		flag = true
+		dayStr := ""
 		for i := 1; i <= 31; i++ {
 			uri := replaceQueryVar(path, value, "date="+y+"-"+m+"-"+sprint(i))
-			out += mdLink(sprint(i), uri) + "-"
+			dayStr += mdLink(sprint(i), uri) + "-"
 		}
-		return removeTrailing(out, "-")
+		out += removeTrailing(dayStr, "-") + "\n\n"
+	}
+	if flag {
+		return out + ","
 	}
 
 	// date is selected
