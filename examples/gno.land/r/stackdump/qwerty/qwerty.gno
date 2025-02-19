@@ -5,29 +5,25 @@ import (
 )
 
 func mdLink(text, url string) string {
-	if !strings.HasPrefix(url, "?") {
-		url = "?" + url
-	}
 	return "[" + text + "](" + url + ")"
 }
 
-func appendToWord(path, value string) string {
-	// if trails with &q= then add the equal sign
-	if strings.HasSuffix(path, "&q") {
+func appendToWord(path, fieldName, value string) string {
+	if strings.HasSuffix(path, "&"+fieldName) {
 		return path + "=" + value
 	}
 
 	p := path + value
-	if strings.HasPrefix(path, "?q=") {
+	if strings.HasPrefix(path, "?") {
 		return p
 	} else {
-		return "?q=" + p
+		return "?" + fieldName + "=" + p
 	}
 }
 
-func removeLastChar(path string) string {
-	if strings.HasSuffix(path, "&q") {
-		return path[:len(path)-2]
+func removeLastChar(path, fieldName string) string {
+	if strings.HasSuffix(path, "&"+fieldName) {
+		return path[:len(path)-len(fieldName)-1]
 	}
 	if len(path) > 0 {
 		return path[:len(path)-1]
@@ -35,7 +31,10 @@ func removeLastChar(path string) string {
 	return path
 }
 
-func NewKeyboardField(path string) string {
+// StringField creates a keyboard for entering text
+// path is the current path
+// fieldName is the name of the field to use in the query string
+func StringField(path, fieldName string) (string, func() string) {
 	out := ""
 	numbers := "1234567890"
 	upper := []string{
@@ -49,52 +48,51 @@ func NewKeyboardField(path string) string {
 		"xyz_ 🔙",
 	}
 
-	out += KeyboardRow(path, numbers) + "\n\n"
+	out += keyboardRow(path, fieldName, numbers) + "\n\n"
 	for _, row := range upper {
-		out += KeyboardRow(path, row) + "\n\n"
+		out += keyboardRow(path, fieldName, row) + "\n\n"
 	}
 	for _, row := range lower {
-		out += KeyboardRow(path, row) + "\n\n"
+		out += keyboardRow(path, fieldName, row) + "\n\n"
 	}
-	return out
-
+	return out, func() string {
+		return stringFieldToText(path, fieldName)
+	}
 }
-func KeyboardRow(path, keys string) string {
+
+// keyboardRow creates a row of keys from input string
+func keyboardRow(path, fieldName, keys string) string {
 	out := ""
 	for _, key := range keys {
 		keyStr := string(key)
 		if key == '🔙' {
-			uri := removeLastChar(path)
+			uri := removeLastChar(path, fieldName)
 			out += mdLink("back", uri) + " "
 		} else if key == ' ' {
-			uri := appendToWord(path, "&q=")
+			uri := appendToWord(path, fieldName, "&"+fieldName+"=")
 			out += mdLink("space", uri) + " "
 		} else {
-			uri := appendToWord(path, keyStr)
+			uri := appendToWord(path, fieldName, keyStr)
 			out += mdLink(keyStr, uri) + " "
 		}
 	}
 	return out
 }
 
-func toText(path string) string {
-	if !strings.HasPrefix(path, "?q=") {
-		return ""
+// stringFieldToText converts a query string to text
+func stringFieldToText(path, fieldName string) string {
+	if !strings.HasPrefix(path, "?"+fieldName+"=") {
+		return "[enter text by clicking on the embedded keyboard]"
 	}
-	p := strings.Replace(path, "?q=", "", 1)
-	p = strings.Replace(p, "&q=", " ", -1)
-	p = strings.Replace(p, "&q", " ", -1)
+	p := strings.Replace(path, "?"+fieldName+"=", "", 1)
+	p = strings.Replace(p, "&"+fieldName+"=", " ", -1)
+	p = strings.Replace(p, "&"+fieldName, " ", -1)
 	return p
 }
 
-func Keyboard(path string) string {
-	out := "[Restart](./qwerty)\n\n"
-	out += NewKeyboardField(path)
-	return out
-}
-
 func Render(path string) string {
-	out := Keyboard(path) + "\n"
-	out += "```" + toText(path) + "```"
+	out := "[Restart](./qwerty)\n\n"
+	field, getText := StringField(path, "q")
+	out += field + "\n\n```" + getText() + "```"
 	return out
 }

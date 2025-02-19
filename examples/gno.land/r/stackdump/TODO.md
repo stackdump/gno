@@ -1,0 +1,4 @@
+- [ ] https://docs.gno.land/concepts/effective-gno#emit-gno-events-to-make-life-off-chain-easier
+- [ ] add date-range picker
+- [ ] add a way to add orgs, or pre-selected
+- [ ] add a way to add cities, or pre-selected
