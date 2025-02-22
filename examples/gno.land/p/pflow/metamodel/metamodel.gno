@@ -183,10 +183,55 @@ func NewDisplay(model *Pflow, state ...map[string]TokenType) Display {
 	return Display{Model: model, State: make(map[string]TokenType)}
 }
 
-// NewSvgImage creates a new Svg image with the given width and height.
-func (d *Display) NewSvgImage(w, h int) {
-	d.Buffer += "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + sprint(w) + " " + sprint(h) + "\">"
-	d.Rect(0, 0, w, h, "fill=\"#ffffff\"")
+// GetViewPort calculates the viewport dimensions for the Petri net model.
+func (d *Display) GetViewPort() (x1 int, y1 int, width int, height int) {
+	var minX int = 0
+	var minY int = 0
+	var limitX int = 0
+	var limitY int = 0
+
+	for _, p := range d.Model.Places {
+		if limitX < p.X {
+			limitX = p.X
+		}
+		if limitY < p.Y {
+			limitY = p.Y
+		}
+		if minX == 0 || minX > p.X {
+			minX = p.X
+		}
+		if minY == 0 || minY > p.Y {
+			minY = p.Y
+		}
+	}
+	for _, t := range d.Model.Transitions {
+		if limitX < t.X {
+			limitX = t.X
+		}
+		if limitY < t.Y {
+			limitY = t.Y
+		}
+		if minX == 0 || minX > t.X {
+			minX = t.X
+		}
+		if minY == 0 || minY > t.Y {
+			minY = t.Y
+		}
+	}
+	const margin = 60
+	x1 = minX - margin
+	y1 = minY - margin
+	x2 := limitX + margin
+	y2 := limitY + margin
+
+	return x1, y1, x2 - x1, y2 - y1
+}
+
+// NewSvgImage creates a new Svg image for the Petri net model.
+func (d *Display) NewSvgImage() {
+	x1, y1, width, height := d.GetViewPort()
+	d.Buffer += ufmt.Sprintf("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%v\" height=\"%v\" viewBox=\"%v %v %v %v\">", width, height, x1, y1, width, height)
+	d.Rect(0, 0, width, height, "fill=\"#ffffff\"")
 	d.WriteDefs()
 }
 
@@ -315,30 +360,6 @@ func (d *Display) EndSvg() {
 	d.Buffer += "</svg>"
 }
 
-// GetLimits returns the maximum X and Y coordinates of the places and transitions in the Petri net model.
-// Adds additional 100 to the maxX and maxY to avoid clipping
-func (net *Pflow) GetLimits() (int, int) {
-	maxX := 0
-	maxY := 0
-	for _, p := range net.Places {
-		if p.X > maxX {
-			maxX = p.X
-		}
-		if p.Y > maxY {
-			maxY = p.Y
-		}
-	}
-	for _, t := range net.Transitions {
-		if t.X > maxX {
-			maxX = t.X
-		}
-		if t.Y > maxY {
-			maxY = t.Y
-		}
-	}
-	return maxX + 100, maxY + 100
-}
-
 // ToSvg returns the Svg representation of the Petri net model.
 func (net *Pflow) ToSvg(state ...map[string]TokenType) string {
 	s := make(map[string]TokenType)
@@ -346,8 +367,7 @@ func (net *Pflow) ToSvg(state ...map[string]TokenType) string {
 		s = state[0]
 	}
 	d := NewDisplay(net, s)
-	maxX, maxY := net.GetLimits()
-	d.NewSvgImage(maxX, maxY)
+	d.NewSvgImage()
 	d.Render()
 	return d.Buffer
 }
