@@ -4,12 +4,16 @@ import (
 	mm "gno.land/p/pflow/metamodel"
 )
 
+var (
+    profile = 'https://cdn.fosstodon.org/accounts/avatars/109/321/820/947/488/248/original/7bceedbbc65e95b3.jpg'
+)
+
 const intro = `
 # Stackdump
 
 Hi, I’m Matt York—engineer, blockchain researcher, and creator of pflow.xyz, a Petri-net SDK for modeling complex systems.
 
-![Matt York](https://bafybeien3ahzdauw2c24xq3yraxlcfaqzv2zu7o35sw4cwcx55hl2s6eem.ipfs.dweb.link/)
+![Matt York](`+profile+`)
 
 Check out my latest thoughts on software design, blockchain, and Petri nets at [blog.stackdump.com](https://blog.stackdump.com).
 
@@ -63,7 +67,7 @@ func exampleModel() *mm.Pflow {
 func exampleModel() *mm.Pflow {
 	return &mm.Pflow{
 		Places: map[string]mm.Place{
-			"place0": {Offset: 0, Initial: 1, Capacity: 3, X: 130, Y: 207},
+			"place0": {Offset: 0, Initial: mm.T(1), Capacity: mm.T(3), X: 130, Y: 207},
 		},
 		Transitions: map[string]mm.Transition{
 			"txn0": {X: 46, Y: 116},
@@ -72,10 +76,10 @@ func exampleModel() *mm.Pflow {
 			"txn3": {X: 235, Y: 306},
 		},
 		Arrows: []mm.Arrow{
-			{Source: "txn0", Target: "place0", Weight: 1},
-			{Source: "place0", Target: "txn1", Weight: 3},
-			{Source: "txn2", Target: "place0", Weight: 3, Inhibit: true},
-			{Source: "place0", Target: "txn3", Weight: 1, Inhibit: true},
+			{Source: "txn0", Target: "place0", Weight: mm.T(1)},
+			{Source: "place0", Target: "txn1", Weight: mm.T(3)},
+			{Source: "txn2", Target: "place0", Weight: mm.T(3), Inhibit: true},
+			{Source: "place0", Target: "txn3", Weight: mm.T(1), Inhibit: true},
 		},
 	}
 }
@@ -83,18 +87,17 @@ func exampleModel() *mm.Pflow {
 var m = exampleModel()
 
 func Render(path string) string {
-	image := m.ToImageMarkdown()
+    state:= mm.S(mm.T(1))
+	image := m.ToImageMarkdown(state)
 	return intro +
 		libraries +
-		"#### ToLinkMarkdown()\n - export the model as markdown image \n" +
-		"- rendered as svg using [https://pflow.dev/img/?b=&lt;Base64&gt;](https://pflow.dev)" +
-		"\n\n" + m.ToLinkMarkdown() + "\n\n" +
-		"#### ToJson()\n - export the model as json\n - json can be edited using [https://pflow.dev/editor](https://pflow.dev/editor)" +
-		"\n\n```json\n" + m.ToJson() + "\n```\n\n" +
+
+		// FIXME: render svg locally
+
 		"#### ToSvg()\n - draw the model as an Svg image\n - save to file an open with browser or any Svg compatible program" +
-		"\n\n```svg\n" + m.ToSvg() + "\n```\n\n" +
-		"#### ToImageMardown()\n - export the model as a data URL\n - copy and paste into an <img> tag" +
-		"\n\n" + image + "\n\n" +
+		"\n\n```svg\n" + m.ToSvg(m.State()) + "\n```\n\n" +
+
+
 		"\n\n```\n" + image + "\n```\n\n" +
 		"#### Pflow Model \n\n Review the Gnolang source below for this state machine. \n\n" +
 		"```go\n" + exampleSource + "\n```\n"
