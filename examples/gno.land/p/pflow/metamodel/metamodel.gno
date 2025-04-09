@@ -10,30 +10,30 @@ type TokenType []int64
 
 // T creates a TokenType from a list of integers or strings.
 func T(t ...interface{}) TokenType {
-    ts := make(TokenType, len(t))
-    for i, v := range t {
-        switch v := v.(type) {
-        case int:
-            ts[i] = int64(v)
-        case int64:
-            ts[i] = v
-        case string:
-            ts[i] = 1
-        default:
-            ts[i] = -1
-        }
-    }
+	ts := make(TokenType, len(t))
+	for i, v := range t {
+		switch v := v.(type) {
+		case int:
+			ts[i] = int64(v)
+		case int64:
+			ts[i] = v
+		case string:
+			ts[i] = 1
+		default:
+			ts[i] = -1
+		}
+	}
 
-    return ts
+	return ts
 }
 
 // S creates a TokenType state vector from a list of TokenType.
 func S(ts ...interface{}) []TokenType {
-    state := make([]TokenType, len(ts))
-    for i, v := range ts {
-        state[i] = T(v)
-    }
-    return state
+	state := make([]TokenType, len(ts))
+	for i, v := range ts {
+		state[i] = T(v)
+	}
+	return state
 }
 
 // Place represents a place in the Petri net.
@@ -71,11 +71,11 @@ type Pflow struct {
 }
 
 func (model *Pflow) State() []TokenType {
-    state := make([]TokenType, len(model.Places))
-    for _, place := range model.Places {
-        state[place.Offset] = place.Tokens
-    }
-    return state
+	state := make([]TokenType, len(model.Places))
+	for _, place := range model.Places {
+		state[place.Offset] = place.Tokens
+	}
+	return state
 }
 
 func Execute(state []TokenType, model *Pflow, action string) ([]TokenType, bool) {
@@ -92,7 +92,7 @@ func Execute(state []TokenType, model *Pflow, action string) ([]TokenType, bool)
 				sourceTokens[i] -= weight
 			}
 		} else if arc.Source == action {
-		    targetTokens := model.Places[arc.Target].Tokens
+			targetTokens := model.Places[arc.Target].Tokens
 			for i, weight := range arc.Weight {
 				targetTokens[i] += weight
 				if model.Places[arc.Target].Capacity[i] > 0 && targetTokens[i] > model.Places[arc.Target].Capacity[i] {
@@ -147,14 +147,14 @@ func (net *Pflow) ToBase64(state []TokenType) string {
 
 // ToLinkMarkdown generates a markdown link to the SVG image.
 func (net *Pflow) ToLinkMarkdown(state []TokenType) string {
-    return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
+	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
 }
 
 // ToImageMarkdown generates a markdown image link to the SVG image.
 func (net *Pflow) ToImageMarkdown(state []TokenType) string {
-    return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
+	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
 }
 
-func (net *Pflow) ToJson(state[]TokenType) string {
-    return "{}"
+func (net *Pflow) ToJson(state []TokenType) string {
+	return "{}"
 }
