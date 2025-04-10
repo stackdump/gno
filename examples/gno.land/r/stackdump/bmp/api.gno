@@ -47,6 +47,7 @@ type PixelSetter = func(x, y, r, g, b int)
 
 type ImageApi interface {
     Pixels(p PixelSetter)
+    Bounds() Bounds
 }
 
 func Register(name string, handler ImageApi) {
@@ -76,14 +77,14 @@ func Render(path string) (out string) {
     if !ok {
         panic("path not registered: " + path)
     }
-    img := NewPixelImage(50)
+    img := NewPixelImage(50, handler.Bounds())
     handler.Pixels(img.SetPixel)
     if len(args) == 2 && args[1] == "source" {
         return "```\n"+img.Source(args[0])+"```"
     }
     out = img.ToMarkdown()
-    out += "[INSECURE: DAPP](data:text/html;utf8,"+url.PathEscape(htmlContent)+")\n"
-    out += "copy data url and paste in browser to build a new pixelfied image.\n"
+    out += "[INSECURE: DAPP](data:text/html;utf8,"+url.PathEscape(htmlContent)+")"
+    out += "\n\nCopy Link Address (Data Url) and paste in browser to build a new pixelfied image of your own.\n"
 
     return out
 }

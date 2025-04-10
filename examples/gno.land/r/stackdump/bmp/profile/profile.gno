@@ -12,6 +12,10 @@ func init() {
     image.Register("profile", Profile{})
 }
 
+func (Profile) Bounds() image.Bounds {
+    return image.Bounds{0, 10, 40, 45}
+}
+
 func (Profile) Pixels(p image.PixelSetter) {
 	p(0, 13, 79, 128, 230)
 	p(0, 14, 73, 133, 231)

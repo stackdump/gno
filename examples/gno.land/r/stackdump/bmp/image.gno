@@ -21,15 +21,10 @@ type ColorPixel struct {
 	B uint8
 }
 
-func NewPixelImage(gridWidth int) *PixelImage {
+func NewPixelImage(gridWidth int, bounds Bounds) *PixelImage {
     return &PixelImage{
         Pixels: make([]ColorPixel, gridWidth*gridWidth),
-        Bounds: Bounds{
-            X1: 0,
-            Y1: 0,
-            X2: gridWidth,
-            Y2: gridWidth,
-        },
+        Bounds: bounds,
     }
 }
 
