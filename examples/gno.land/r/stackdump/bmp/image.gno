@@ -22,15 +22,15 @@ type ColorPixel struct {
 }
 
 func NewPixelImage(gridWidth int, bounds Bounds) *PixelImage {
-    return &PixelImage{
-        Pixels: make([]ColorPixel, gridWidth*gridWidth),
-        Bounds: bounds,
-    }
+	return &PixelImage{
+		Pixels: make([]ColorPixel, gridWidth*gridWidth),
+		Bounds: bounds,
+	}
 }
 
 type PixelImage struct {
-    Pixels []ColorPixel
-    Bounds
+	Pixels []ColorPixel
+	Bounds
 }
 
 func (image *PixelImage) SetPixel(x, y, r, g, b int) {
@@ -176,7 +176,7 @@ const footer = `
 
 func (image *PixelImage) Source(name string) string {
 
-    objectName := strings.Title(name)
+	objectName := strings.Title(name)
 	src := ufmt.Sprintf(heading, name, objectName, objectName, name, objectName, objectName)
 	livePixels := 0
 	for i := 0; i < len(image.Pixels); i++ {

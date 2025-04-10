@@ -13,7 +13,7 @@ func init() {
 }
 
 func (Pflower) Bounds() image.Bounds {
-    return image.Bounds{X1: 15, Y1: 15, X2: 34, Y2: 34}
+	return image.Bounds{X1: 15, Y1: 15, X2: 34, Y2: 34}
 }
 
 func (Pflower) Pixels(p image.PixelSetter) {

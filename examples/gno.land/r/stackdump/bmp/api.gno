@@ -1,19 +1,19 @@
 package bmp
-import(
-    "std"
-    "net/url"
-    "strings"
-    "gno.land/p/demo/ufmt"
+
+import (
+	"gno.land/p/demo/ufmt"
+	"net/url"
+	"std"
+	"strings"
 )
 
 var (
-    registry = make(map[string]ImageApi) // TODO: use AVL Tree
-	images = make(map[string]*PixelImage)
+	registry         = make(map[string]ImageApi) // TODO: use AVL Tree
 	realmAllowPrefix = []string{}
 )
 
 func init() {
-    allowPatchesFromSubRealms()
+	allowPatchesFromSubRealms()
 }
 
 func allowPatchesFromSubRealms() {
@@ -39,52 +39,52 @@ func AssertAccess() {
 
 func AssertValidName(name string) {
 	if !strings.HasSuffix(std.PreviousRealm().PkgPath(), name) {
-        panic("invalid name: " + name + " must end with " + std.PreviousRealm().PkgPath())
-    }
+		panic("invalid name: " + name + " must end with " + std.PreviousRealm().PkgPath())
+	}
 }
 
 type PixelSetter = func(x, y, r, g, b int)
 
 type ImageApi interface {
-    Pixels(p PixelSetter)
-    Bounds() Bounds
+	Pixels(p PixelSetter)
+	Bounds() Bounds
 }
 
 func Register(name string, handler ImageApi) {
-    AssertAccess()
-    AssertValidName(name)
+	AssertAccess()
+	AssertValidName(name)
 	if _, exists := registry[name]; !exists {
-        registry[name] = handler
+		registry[name] = handler
 	}
 }
 
 func Render(path string) (out string) {
-    defer func() {
-        if r := recover(); r != nil {
-            out = ufmt.Sprint(r)
-        }
-    }()
-    args := []string{}
-    if path == "" {
-        path = "profile"
-    } else {
-        args = strings.Split(path, ":")
-        if len(args) > 1 {
-            path = args[0]
-        }
-    }
-    handler, ok  := registry[path]
-    if !ok {
-        panic("path not registered: " + path)
-    }
-    img := NewPixelImage(50, handler.Bounds())
-    handler.Pixels(img.SetPixel)
-    if len(args) == 2 && args[1] == "source" {
-        return "```\n"+img.Source(args[0])+"```"
-    }
-    out = img.ToMarkdown()
-    out += "[INSECURE: DAPP](data:text/html;utf8,"+url.PathEscape(htmlContent)+")"
-    out += "\n\nCopy Link Address (Data Url) and paste in browser to build a new pixelfied image of your own.\n"
+	defer func() {
+		if r := recover(); r != nil {
+			out = ufmt.Sprint(r)
+		}
+	}()
+	args := []string{}
+	if path == "" {
+		path = "profile"
+	} else {
+		args = strings.Split(path, ":")
+		if len(args) > 1 {
+			path = args[0]
+		}
+	}
+	handler, ok := registry[path]
+	if !ok {
+		panic("path not registered: " + path)
+	}
+	img := NewPixelImage(50, handler.Bounds())
+	handler.Pixels(img.SetPixel)
+	if len(args) == 2 && args[1] == "source" {
+		return "```\n" + img.Source(args[0]) + "```"
+	}
+	out = img.ToMarkdown()
+	out += "[INSECURE: DAPP](data:text/html;utf8," + url.PathEscape(htmlContent) + ")"
+	out += "\n\nCopy Link Address (Data Url) and paste in browser to build a new pixelfied image of your own.\n"
 
-    return out
+	return out
 }

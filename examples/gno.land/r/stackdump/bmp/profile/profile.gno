@@ -4,16 +4,16 @@ import (
 	image "gno.land/r/stackdump/bmp"
 )
 
-type Profile struct {}
+type Profile struct{}
 
 var _ image.ImageApi = &Profile{}
 
 func init() {
-    image.Register("profile", Profile{})
+	image.Register("profile", Profile{})
 }
 
 func (Profile) Bounds() image.Bounds {
-    return image.Bounds{0, 10, 40, 45}
+	return image.Bounds{0, 10, 40, 45}
 }
 
 func (Profile) Pixels(p image.PixelSetter) {
