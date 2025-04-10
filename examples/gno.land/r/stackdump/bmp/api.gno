@@ -1,6 +1,7 @@
 package bmp
 import(
     "std"
+    "net/url"
     "strings"
     "gno.land/p/demo/ufmt"
 )
@@ -80,5 +81,9 @@ func Render(path string) (out string) {
     if len(args) == 2 && args[1] == "source" {
         return "```\n"+img.Source(args[0])+"```"
     }
-    return img.ToMarkdown()
+    out = img.ToMarkdown()
+    out += "[INSECURE: DAPP](data:text/html;utf8,"+url.PathEscape(htmlContent)+")\n"
+    out += "copy data url and paste in browser to build a new pixelfied image.\n"
+
+    return out
 }
