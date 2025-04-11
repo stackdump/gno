@@ -4,12 +4,22 @@ import (
 	"net/url"
 )
 
-func dataURL() string {
+var (
+    Bmp = &Dapp{}
+ )
+
+type Dapp struct{}
+
+func (Dapp) DataUrl() string {
 	return "data:text/html;utf8," + url.PathEscape(htmlContent)
 }
 
-func Dapp() string {
-	return "## PIXELFIED DAPP\n\n[INSECURE DAPP](" + dataURL() + ")\n\n" + dappInfo
+func (Dapp) Markdown() string {
+	return "## PIXELFIED DAPP\n\n[INSECURE DAPP](" + "data:text/html;utf8," + url.PathEscape(htmlContent) + ")\n\n" + dappInfo
+}
+
+func (Dapp) Html() string {
+	return htmlContent
 }
 
 const dappInfo = `

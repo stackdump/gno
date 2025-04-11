@@ -50,10 +50,10 @@ func (image *PixelImage) SetPixel(x, y, r, g, b int) {
 }
 
 func (image *PixelImage) ToMarkdown() string {
-	return "![stackdump-bmp](data:image/svg+xml;utf8," + url.PathEscape(image.GenerateSVG()) + ")"
+	return "![stackdump-bmp](data:image/svg+xml;utf8," + url.PathEscape(image.ToSvg()) + ")"
 }
 
-func (image *PixelImage) GenerateSVG() string {
+func (image *PixelImage) ToSvg() string {
 	tileSize := 1
 
 	var sb strings.Builder
@@ -130,28 +130,6 @@ func (image *PixelImage) GenerateSVG() string {
 	return sb.String()
 }
 
-func NewGrid(size ...int) []ColorPixel {
-	gridSize := 50
-	if len(size) > 0 {
-		gridSize = size[0]
-	}
-	pixels := make([][]ColorPixel, gridSize)
-	for i := range pixels {
-		pixels[i] = make([]ColorPixel, gridSize)
-		for j := range pixels[i] {
-			pixels[i][j] = ColorPixel{}
-		}
-	}
-
-	// Flatten the 2D slice into a 1D slice
-	var flatPixels []ColorPixel
-	for _, row := range pixels {
-		flatPixels = append(flatPixels, row...)
-	}
-
-	return flatPixels
-}
-
 const heading = `
 package %s
 
@@ -174,6 +152,7 @@ const footer = `
 }
 `
 
+// FIXME update to include bounds
 func (image *PixelImage) Source(name string) string {
 
 	objectName := strings.Title(name)

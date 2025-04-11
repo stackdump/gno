@@ -19,7 +19,7 @@ func allowPatchesFromSubRealms() {
 	realmAllowPrefix = append(realmAllowPrefix, std.CurrentRealm().PkgPath()+"/") // must be in realm sub-path
 }
 
-func HasAllowedPrefix() bool {
+func hasAllowedPrefix() bool {
 	prevRealm := std.PreviousRealm()
 	for _, callerPath := range realmAllowPrefix {
 		if strings.HasPrefix(prevRealm.PkgPath(), callerPath) {
@@ -29,14 +29,14 @@ func HasAllowedPrefix() bool {
 	return false
 }
 
-func AssertAccess() {
-	if !HasAllowedPrefix() {
+func assertAccess() {
+	if !hasAllowedPrefix() {
 		panic("access denied: " + std.PreviousRealm().PkgPath() +
 			" realm must match an allowed prefix:[" + strings.Join(realmAllowPrefix, ",") + "]")
 	}
 }
 
-func AssertValidName(name string) {
+func assertValidName(name string) {
 	if !strings.HasSuffix(std.PreviousRealm().PkgPath(), name) {
 		panic("invalid name: " + name + " must end with " + std.PreviousRealm().PkgPath())
 	}
@@ -50,14 +50,14 @@ type ImageApi interface {
 }
 
 func Register(name string, handler ImageApi) {
-	AssertAccess()
-	AssertValidName(name)
+	assertAccess()
+	assertValidName(name)
 	if _, exists := registry[name]; !exists {
 		registry[name] = handler
 	}
 }
 
-func RenderList(selected string) string {
+func renderList(selected string) string {
 	if len(registry) == 0 {
 		return "No images registered."
 	}
@@ -90,6 +90,25 @@ func RenderList(selected string) string {
 		"[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
 }
 
+func getImageApi(path string) ImageApi {
+    handler, ok := registry[path]
+    if !ok {
+        panic("path not registered: " + path)
+    }
+    return handler
+}
+
+func Html() string {
+    return Bmp.Html()
+}
+
+func Svg(name string) string {
+    builder := getImageApi(name)
+	img := NewPixelImage(50, builder.Bounds())
+	builder.Pixels(img.SetPixel)
+	return img.ToSvg()
+}
+
 func Render(path string) (out string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -106,17 +125,14 @@ func Render(path string) (out string) {
 		}
 	}
 	if path == "dapp" {
-		out += "\n\n" + Dapp() + "\n\n"
+		out += "\n\n" + Bmp.Markdown() + "\n\n"
 		return out
 	}
-	handler, ok := registry[path]
-	if !ok {
-		panic("path not registered: " + path)
-	}
+	handler := getImageApi(path)
 	img := NewPixelImage(50, handler.Bounds())
 	handler.Pixels(img.SetPixel)
 	out = img.ToMarkdown()
-	out += "\n\n" + RenderList(path) + "\n\n"
+	out += "\n\n" + renderList(path) + "\n\n"
 	out += "\n\n[PIXELFIED DAPP](./bmp:dapp)\n\n"
 
 	if len(args) == 2 {
