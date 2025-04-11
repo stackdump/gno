@@ -1,5 +1,54 @@
 package bmp
+import (
+    "net/url"
+)
 
+func dataURL() string {
+    return "data:text/html;utf8," + url.PathEscape(htmlContent)
+}
+
+func Dapp() string {
+    return "## PIXELFIED DAPP\n\n[INSECURE DAPP](" + dataURL() + ")\n\n" + dappInfo
+}
+
+const dappInfo = `
+### How to Use the JavaScript Widget for Pixelized Images
+
+The JavaScript widget provided in the htmlContent section of the [dapp.gno](./bmp$source&file=dapp.gno) file allows you to generate pixelized images and export them as Gno-compatible data.
+
+Open the Widget: Right click on "INSECURE DAPP" link above.
+
+Use "Copy Link Address" and paste it into a new tab to run the JS widget.
+
+---
+
+#### **Steps to Use the Widget**
+
+1. **Load an Image**:
+   Use the "Choose File" button to upload an image from your local system. The widget will process this image to create a pixelized version.
+
+2. **Set Grid Dimensions**:
+   Adjust the "Grid Width" and "Grid Height" inputs to control the resolution of the pixelized image. Higher values will result in more detail but may take longer to process.
+
+3. **Generate SVG**:
+   Click the "Generate SVG" button to create an SVG representation of the pixelized image. The preview will display the SVG output.
+
+4. **Export Gno Data**:
+   Click the "Generate Gno Data" button to export the pixelized image as Gno function calls. These calls are displayed in the text area and can be copied into your Gno codebase.
+
+---
+
+#### **Important Notes**
+
+- **HTML Restrictions on Gno.land**:
+  Gno.land forbids the use of raw HTML in realms. To work around this, the widget is embedded as a data: URL, which allows the HTML content to be safely included without violating platform restrictions.
+
+- **How Pixelized Images Are Stored**:
+  In Gno, pixelized images are stored as function callbacks. Each pixel is represented by a function call like p(x, y, r, g, b), where:
+  - x and y are the pixel's coordinates,
+  - r, g, and b are the red, green, and blue color values of the pixel.
+  These function calls are executed to render the image dynamically. This approach avoids storing raw image data and instead relies on procedural generation.
+`
 const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -27,15 +76,15 @@ const htmlContent = `
 </head>
 <body>
 
-<h2>CRT SVG Pixelizer (Defs + Gno Export)</h2>
+<h2>SVG Pixelizer (Defs + Gno Export)</h2>
 <input type="file" id="imageLoader" accept="image/*"><br>
 <label>
   Grid Width:
-  <input type="number" id="gridWidth" value="16" min="1">
+  <input type="number" id="gridWidth" value="50" min="1">
 </label>
 <label>
   Grid Height:
-  <input type="number" id="gridHeight" value="16" min="1">
+  <input type="number" id="gridHeight" value="50" min="1">
 </label>
 <button id="generateBtn">Generate SVG</button>
 <button id="gnoExportBtn">Generate Gno Data</button>

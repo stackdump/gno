@@ -2,7 +2,6 @@ package bmp
 
 import (
 	"gno.land/p/demo/ufmt"
-	"net/url"
 	"std"
 	"strings"
 )
@@ -58,6 +57,38 @@ func Register(name string, handler ImageApi) {
 	}
 }
 
+func RenderList(selected string) string {
+    if len(registry) == 0 {
+        return "No images registered."
+    }
+
+    keys := make([]string, 0, len(registry))
+    for key := range registry {
+        keys = append(keys, key)
+    }
+
+    // Find the index of the selected image
+    selectedIndex := -1
+    for i, key := range keys {
+        if key == selected {
+            selectedIndex = i
+            break
+        }
+    }
+
+    if selectedIndex == -1 {
+        return "Selected image not found."
+    }
+
+    // Get previous and next images circularly
+    prevIndex := (selectedIndex - 1 + len(keys)) % len(keys)
+    nextIndex := (selectedIndex + 1) % len(keys)
+
+    return "[bmp:"+keys[selectedIndex]+"]( ./bmp:" + keys[selectedIndex] + ")\n\n" +
+           "[<- prev](./bmp:" + keys[prevIndex] + ")\n" +
+           "[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
+}
+
 func Render(path string) (out string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -73,18 +104,24 @@ func Render(path string) (out string) {
 			path = args[0]
 		}
 	}
+    if path == "dapp" {
+        out += "\n\n"+Dapp()+"\n\n"
+        return out
+	}
 	handler, ok := registry[path]
 	if !ok {
 		panic("path not registered: " + path)
 	}
 	img := NewPixelImage(50, handler.Bounds())
 	handler.Pixels(img.SetPixel)
-	if len(args) == 2 && args[1] == "source" {
-		return "```\n" + img.Source(args[0]) + "```"
-	}
-	out = img.ToMarkdown()
-	out += "[INSECURE: DAPP](data:text/html;utf8," + url.PathEscape(htmlContent) + ")"
-	out += "\n\nCopy Link Address (Data Url) and paste in browser to build a new pixelfied image of your own.\n"
+    out = img.ToMarkdown()
+    out += "\n\n"+RenderList(path)+"\n\n"
+    out += "\n\n[PIXEFIED DAPP](./bmp:dapp)\n\n"
 
-	return out
+	if len(args) == 2 {
+	    if args[1] == "source" {
+            return "```\n" + img.Source(args[0]) + "```"
+	    }
+	}
+    return out
 }
