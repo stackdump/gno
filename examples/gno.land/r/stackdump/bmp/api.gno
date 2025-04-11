@@ -104,7 +104,11 @@ func Html() string {
 
 func Svg(name string) string {
     builder := getImageApi(name)
-	img := NewPixelImage(50, builder.Bounds())
+
+	img := &PixelImage{
+		Pixels: make([]ColorPixel, 50*50),
+		Bounds: builder.Bounds(),
+	}
 	builder.Pixels(img.SetPixel)
 	return img.ToSvg()
 }
@@ -128,9 +132,12 @@ func Render(path string) (out string) {
 		out += "\n\n" + Bmp.Markdown() + "\n\n"
 		return out
 	}
-	handler := getImageApi(path)
-	img := NewPixelImage(50, handler.Bounds())
-	handler.Pixels(img.SetPixel)
+	builder := getImageApi(path)
+	img := &PixelImage{
+		Pixels: make([]ColorPixel, 50*50),
+		Bounds: builder.Bounds(),
+	}
+	builder.Pixels(img.SetPixel)
 	out = img.ToMarkdown()
 	out += "\n\n" + renderList(path) + "\n\n"
 	out += "\n\n[PIXELFIED DAPP](./bmp:dapp)\n\n"
