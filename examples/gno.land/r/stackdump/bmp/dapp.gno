@@ -5,8 +5,8 @@ import (
 )
 
 var (
-    Bmp = &Dapp{}
- )
+	Bmp = &Dapp{}
+)
 
 type Dapp struct{}
 

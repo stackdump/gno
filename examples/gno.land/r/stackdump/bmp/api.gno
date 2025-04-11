@@ -1,13 +1,14 @@
 package bmp
 
 import (
+	"gno.land/p/demo/avl"
 	"gno.land/p/demo/ufmt"
 	"std"
 	"strings"
 )
 
 var (
-	registry         = make(map[string]ImageApi) // TODO: use AVL Tree
+	registry         = avl.NewTree()
 	realmAllowPrefix = []string{}
 )
 
@@ -36,6 +37,9 @@ func assertAccess() {
 	}
 }
 
+// assertValidName controls the name of the image by the caller path
+// ex1: /r/stackdump/bmp/v0.0.1_profile is allowed to set "profile" image
+// ex2: /r/stackdump/bmp/v0.0.1/subfolder/profile is allowed to set "profile" image
 func assertValidName(name string) {
 	if !strings.HasSuffix(std.PreviousRealm().PkgPath(), name) {
 		panic("invalid name: " + name + " must end with " + std.PreviousRealm().PkgPath())
@@ -49,23 +53,27 @@ type ImageApi interface {
 	Bounds() Bounds
 }
 
-func Register(name string, handler ImageApi) {
+func Register(name string, imgHandler ImageApi) {
 	assertAccess()
 	assertValidName(name)
-	if _, exists := registry[name]; !exists {
-		registry[name] = handler
+	if _, exists := registry.Get(name); !exists {
+		std.Emit("image_registered", "name", name)
+	} else {
+		std.Emit("image_updated", "name", name)
 	}
+	registry.Set(name, imgHandler)
 }
 
 func renderList(selected string) string {
-	if len(registry) == 0 {
+	if registry.Size() == 0 {
 		return "No images registered."
 	}
 
-	keys := make([]string, 0, len(registry))
-	for key := range registry {
+	keys := make([]string, 0, registry.Size())
+	registry.IterateByOffset(0, registry.Size(), func(key string, value any) bool {
 		keys = append(keys, key)
-	}
+		return false
+	})
 
 	// Find the index of the selected image
 	selectedIndex := -1
@@ -85,25 +93,25 @@ func renderList(selected string) string {
 	nextIndex := (selectedIndex + 1) % len(keys)
 
 	return "[bmp]( ./bmp:" + keys[selectedIndex] + ":source):" +
-        "[" + keys[selectedIndex] + "]( ./bmp:" + keys[selectedIndex] + ")\n\n"+
+		"[" + keys[selectedIndex] + "]( ./bmp:" + keys[selectedIndex] + ")\n\n" +
 		"[<- prev](./bmp:" + keys[prevIndex] + ")\n" +
 		"[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
 }
 
 func getImageApi(path string) ImageApi {
-    handler, ok := registry[path]
-    if !ok {
-        panic("path not registered: " + path)
-    }
-    return handler
+	imgHandler, ok := registry.Get(path)
+	if !ok {
+		panic("path not registered: " + path)
+	}
+	return imgHandler.(ImageApi)
 }
 
 func Html() string {
-    return Bmp.Html()
+	return Bmp.Html()
 }
 
 func Svg(name string) string {
-    builder := getImageApi(name)
+	builder := getImageApi(name)
 
 	img := &PixelImage{
 		Pixels: make([]ColorPixel, 50*50),
