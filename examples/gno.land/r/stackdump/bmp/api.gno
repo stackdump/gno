@@ -84,7 +84,8 @@ func RenderList(selected string) string {
 	prevIndex := (selectedIndex - 1 + len(keys)) % len(keys)
 	nextIndex := (selectedIndex + 1) % len(keys)
 
-	return "[bmp:" + keys[selectedIndex] + "]( ./bmp:" + keys[selectedIndex] + ")\n\n" +
+	return "[bmp]( ./bmp:" + keys[selectedIndex] + ":source):" +
+        "[" + keys[selectedIndex] + "]( ./bmp:" + keys[selectedIndex] + ")\n\n"+
 		"[<- prev](./bmp:" + keys[prevIndex] + ")\n" +
 		"[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
 }
