@@ -58,35 +58,35 @@ func Register(name string, handler ImageApi) {
 }
 
 func RenderList(selected string) string {
-    if len(registry) == 0 {
-        return "No images registered."
-    }
+	if len(registry) == 0 {
+		return "No images registered."
+	}
 
-    keys := make([]string, 0, len(registry))
-    for key := range registry {
-        keys = append(keys, key)
-    }
+	keys := make([]string, 0, len(registry))
+	for key := range registry {
+		keys = append(keys, key)
+	}
 
-    // Find the index of the selected image
-    selectedIndex := -1
-    for i, key := range keys {
-        if key == selected {
-            selectedIndex = i
-            break
-        }
-    }
+	// Find the index of the selected image
+	selectedIndex := -1
+	for i, key := range keys {
+		if key == selected {
+			selectedIndex = i
+			break
+		}
+	}
 
-    if selectedIndex == -1 {
-        return "Selected image not found."
-    }
+	if selectedIndex == -1 {
+		return "Selected image not found."
+	}
 
-    // Get previous and next images circularly
-    prevIndex := (selectedIndex - 1 + len(keys)) % len(keys)
-    nextIndex := (selectedIndex + 1) % len(keys)
+	// Get previous and next images circularly
+	prevIndex := (selectedIndex - 1 + len(keys)) % len(keys)
+	nextIndex := (selectedIndex + 1) % len(keys)
 
-    return "[bmp:"+keys[selectedIndex]+"]( ./bmp:" + keys[selectedIndex] + ")\n\n" +
-           "[<- prev](./bmp:" + keys[prevIndex] + ")\n" +
-           "[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
+	return "[bmp:" + keys[selectedIndex] + "]( ./bmp:" + keys[selectedIndex] + ")\n\n" +
+		"[<- prev](./bmp:" + keys[prevIndex] + ")\n" +
+		"[next ->]( ./bmp:" + keys[nextIndex] + ")\n"
 }
 
 func Render(path string) (out string) {
@@ -104,9 +104,9 @@ func Render(path string) (out string) {
 			path = args[0]
 		}
 	}
-    if path == "dapp" {
-        out += "\n\n"+Dapp()+"\n\n"
-        return out
+	if path == "dapp" {
+		out += "\n\n" + Dapp() + "\n\n"
+		return out
 	}
 	handler, ok := registry[path]
 	if !ok {
@@ -114,14 +114,14 @@ func Render(path string) (out string) {
 	}
 	img := NewPixelImage(50, handler.Bounds())
 	handler.Pixels(img.SetPixel)
-    out = img.ToMarkdown()
-    out += "\n\n"+RenderList(path)+"\n\n"
-    out += "\n\n[PIXEFIED DAPP](./bmp:dapp)\n\n"
+	out = img.ToMarkdown()
+	out += "\n\n" + RenderList(path) + "\n\n"
+	out += "\n\n[PIXELFIED DAPP](./bmp:dapp)\n\n"
 
 	if len(args) == 2 {
-	    if args[1] == "source" {
-            return "```\n" + img.Source(args[0]) + "```"
-	    }
+		if args[1] == "source" {
+			return "```\n" + img.Source(args[0]) + "```"
+		}
 	}
-    return out
+	return out
 }

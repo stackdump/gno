@@ -1,14 +1,15 @@
 package bmp
+
 import (
-    "net/url"
+	"net/url"
 )
 
 func dataURL() string {
-    return "data:text/html;utf8," + url.PathEscape(htmlContent)
+	return "data:text/html;utf8," + url.PathEscape(htmlContent)
 }
 
 func Dapp() string {
-    return "## PIXELFIED DAPP\n\n[INSECURE DAPP](" + dataURL() + ")\n\n" + dappInfo
+	return "## PIXELFIED DAPP\n\n[INSECURE DAPP](" + dataURL() + ")\n\n" + dappInfo
 }
 
 const dappInfo = `
