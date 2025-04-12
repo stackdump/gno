@@ -8,7 +8,7 @@ var (
 	profile = "https://cdn.fosstodon.org/accounts/avatars/109/321/820/947/488/248/original/7bceedbbc65e95b3.jpg"
 )
 
-const intro = `
+var intro = `
 # Stackdump
 
 Hi, I’m Matt York—engineer, blockchain researcher, and creator of pflow.xyz, a Petri-net SDK for modeling complex systems.
@@ -87,17 +87,9 @@ func exampleModel() *mm.Pflow {
 var m = exampleModel()
 
 func Render(path string) string {
-	state := mm.S(mm.T(1))
-	image := m.ToImageMarkdown(state)
+	//state := mm.S(mm.T(1))
+	// image := m.ToImageMarkdown(state)
 	return intro +
 		libraries +
-
-		// FIXME: render svg locally
-
-		"#### ToSvg()\n - draw the model as an Svg image\n - save to file an open with browser or any Svg compatible program" +
-		"\n\n```svg\n" + m.ToSvg(m.State()) + "\n```\n\n" +
-
-		"\n\n```\n" + image + "\n```\n\n" +
-		"#### Pflow Model \n\n Review the Gnolang source below for this state machine. \n\n" +
-		"```go\n" + exampleSource + "\n```\n"
+		"\n\n[DAPP]("+mm.DataUrl()+")"
 }
