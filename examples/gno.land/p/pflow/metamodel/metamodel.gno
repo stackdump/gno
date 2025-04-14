@@ -1,10 +1,10 @@
 package metamodel
 
 import (
-    "strings"
 	"encoding/base64"
-	"net/url"
 	"gno.land/p/demo/ufmt"
+	"net/url"
+	"strings"
 )
 
 // TokenType represents multiple token types as a slice of integers.
@@ -108,11 +108,11 @@ func Execute(state []TokenType, model *Pflow, action string) ([]TokenType, bool)
 }
 
 // ToSvg renders the Petri net as an SVG.
-func (net *Pflow) ToSvg(state []TokenType) string {
+func (model *Pflow) ToSvg(state []TokenType) string {
 	svg := "<svg xmlns=\"http://www.w3.org/2000/svg\">"
 
 	// Render places.
-	for _, place := range net.Places {
+	for _, place := range model.Places {
 		svg += ufmt.Sprintf("<circle cx=\"%d\" cy=\"%d\" r=\"16\" stroke=\"black\" fill=\"white\" />", place.X, place.Y)
 		svg += ufmt.Sprintf("<text x=\"%d\" y=\"%d\" font-size=\"10\">%s</text>", place.X-20, place.Y-20, place.Label)
 
@@ -126,15 +126,15 @@ func (net *Pflow) ToSvg(state []TokenType) string {
 	}
 
 	// Render transitions.
-	for _, transition := range net.Transitions {
+	for _, transition := range model.Transitions {
 		svg += ufmt.Sprintf("<rect x=\"%d\" y=\"%d\" width=\"30\" height=\"30\" fill=\"white\" stroke=\"black\" />", transition.X-15, transition.Y-15)
 		svg += ufmt.Sprintf("<text x=\"%d\" y=\"%d\" font-size=\"10\">%s</text>", transition.X-20, transition.Y-20, transition.Label)
 	}
 
 	// Render arcs.
-	for _, arc := range net.Arrows {
-		source := net.Places[arc.Source]
-		target := net.Transitions[arc.Target]
+	for _, arc := range model.Arrows {
+		source := model.Places[arc.Source]
+		target := model.Transitions[arc.Target]
 		svg += ufmt.Sprintf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"black\" marker-end=\"url(#arrow)\" />", source.X, source.Y, target.X, target.Y)
 	}
 
@@ -143,39 +143,50 @@ func (net *Pflow) ToSvg(state []TokenType) string {
 }
 
 // ToBase64 encodes the SVG as a base64 string.
-func (net *Pflow) ToBase64(state []TokenType) string {
-	return base64.StdEncoding.EncodeToString([]byte(net.ToSvg(state)))
+func (model *Pflow) ToBase64(state []TokenType) string {
+	return base64.StdEncoding.EncodeToString([]byte(model.ToSvg(state)))
+}
+
+func (model *Pflow) ToDataUrl(state []TokenType) string {
+	return "data:image/svg+xml;utf8," + url.PathEscape(model.ToSvg(state))
 }
 
 // ToLinkMarkdown generates a markdown link to the SVG image.
-func (net *Pflow) ToLinkMarkdown(state []TokenType) string {
-	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
+func (model *Pflow) ToLinkMarkdown(state []TokenType) string {
+	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", model.ToBase64(state))
 }
 
 // ToImageMarkdown generates a markdown image link to the SVG image.
-func (net *Pflow) ToImageMarkdown(state []TokenType) string {
-	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", net.ToBase64(state))
+func (model *Pflow) ToImageMarkdown(state []TokenType) string {
+	return ufmt.Sprintf("![Petri-net](https://pflow.dev/img/b=%s)", model.ToBase64(state))
 }
 
-func (net *Pflow) ToJson(state []TokenType) string {
+func (model *Pflow) ToJson(state []TokenType) string {
 	return "{}"
 }
 
-var cdn = "https://cdn.jsdelivr.net/gh/pflow-xyz/pflow-app@0.2.0/static/"
-
-func replaceVars(key, value string) string {
-    // FIXME replace {CDN} with cdn
-    return strings.ReplaceAll(htmlContent, key, value)
+type WebHost struct {
+	Base string
+	Tag  string
+	Path string
 }
 
-func Html() string {
-    return replaceVars("{CDN}", cdn)
+func (h *WebHost) Cdn() string {
+	return h.Base + h.Tag + h.Path
 }
 
-func DataUrl() string {
-	return "data:text/html;utf8," + url.PathEscape(Html())
+func templateHtml(key, value string) string {
+	return strings.ReplaceAll(htmlContent, key, value)
 }
 
+func Html(w *WebHost) string {
+	return templateHtml("{CDN}", w.Cdn())
+}
+
+func DataUrl(w *WebHost) string {
+    // FIXME: need to take model as parameter and render in HTML
+	return "data:text/html;utf8," + url.PathEscape(Html(w))
+}
 
 var htmlContent = `
 <!DOCTYPE html>
