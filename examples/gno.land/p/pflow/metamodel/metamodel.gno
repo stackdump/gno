@@ -175,17 +175,19 @@ func (h *WebHost) Cdn() string {
 	return h.Base + h.Tag + h.Path
 }
 
-func templateHtml(key, value string) string {
-	return strings.ReplaceAll(htmlContent, key, value)
+func templateHtml(key, value string, s SourceProvider, path string) (out string) {
+	out = strings.ReplaceAll(htmlContent, key, value)
+	return strings.ReplaceAll(out, "{SOURCE}", s(path))
 }
 
-func Html(w *WebHost) string {
-	return templateHtml("{CDN}", w.Cdn())
+func Html(w *WebHost, s SourceProvider, path string) string {
+	return templateHtml("{CDN}", w.Cdn(), s , path)
 }
 
-func DataUrl(w *WebHost) string {
-    // FIXME: need to take model as parameter and render in HTML
-	return "data:text/html;utf8," + url.PathEscape(Html(w))
+type SourceProvider = func(path string) string
+
+func DataUrl(w *WebHost, s SourceProvider, path string) string {
+	return "data:text/html;utf8," + url.PathEscape(Html(w, s, path))
 }
 
 var htmlContent = `
@@ -219,26 +221,7 @@ var htmlContent = `
         </g>
         <g id="history" transform="translate(5, 605)" ></g>
         <foreignObject height="50%" width="98%" x="0" y="635">
-<textarea id="source">{
-  "modelType": "PetriNet",
-  "version": "v1",
-  "tokens": ["black"],
-  "places": {
-    "place0": { "offset": 0, "initial": [1], "capacity": [3], "x": 130, "y": 207 }
-  },
-  "transitions": {
-    "txn0": { "x": 46, "y": 116 },
-    "txn1": { "x": 227, "y": 112 },
-    "txn2": { "x": 43, "y": 307 },
-    "txn3": { "x": 235, "y": 306 }
-  },
-  "arcs": [
-    { "source": "txn0", "target": "place0", "weight": [1] },
-    { "source": "place0", "target": "txn1", "weight": [3] },
-    { "source": "txn2", "target": "place0", "weight": [3], "inhibit": true },
-    { "source": "place0", "target": "txn3", "weight": [1], "inhibit": true }
-  ]
-}</textarea>
+            <textarea id="source">{SOURCE}</textarea>
         </foreignObject>
     </svg>
     <script src="{CDN}pflow.js"></script>
