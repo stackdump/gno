@@ -12,12 +12,17 @@ type ContentBlock = func(path string) string
 var (
     webHost = &mm.WebHost{
         Base: "https://cdn.jsdelivr.net/gh/pflow-xyz/pflow-app@",
-        Tag:  "0.2.0",
+        Tag:  "0.2.1",
         Path: "/static/",
     }
 
     registry = avl.NewTree()
     realmAllowPrefix = []string{}
+    displayPaths = []string{
+        "intro",
+        "libraries",
+        "exampleModelV1",
+    }
 
 )
 
@@ -72,6 +77,18 @@ func Update(key, value string) {
 	}
 }
 
+func Publish(keys ...string) {
+    assertAccess()
+    for _, key := range keys {
+        if block, ok := registry.Get(key); ok {
+            block.(ContentBlock)("") // test call with empty path
+        } else {
+            panic("Key not found: " + key)
+        }
+    }
+    displayPaths = keys
+}
+
 func Content(key string, path string) string {
     if block, ok := registry.Get(key); ok {
         return block.(ContentBlock)(path)
@@ -80,5 +97,11 @@ func Content(key string, path string) string {
 }
 
 func Render(path string) string {
-	return Content("intro", path) + Content("libraries", path)
+    sb := strings.Builder{}
+    for _, key := range displayPaths {
+        if block, ok := registry.Get(key); ok {
+            sb.WriteString(block.(ContentBlock)(path))
+        }
+    }
+    return sb.String()
 }

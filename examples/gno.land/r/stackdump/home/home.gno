@@ -12,7 +12,7 @@ func init() {
         return libraries
     })
     register("exampleModelV1", func (_ string) string {
-        return newSource
+        return "```js" + newSource + "\n```"
     })
 }
 
