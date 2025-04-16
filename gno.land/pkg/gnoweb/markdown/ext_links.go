@@ -255,6 +255,8 @@ type linkExtension struct{}
 // Links instance for extending markdown with link functionality
 var Links = &linkExtension{}
 
+var Pflow = &pflowExtension{}
+
 // Extend adds the LinkExtension to the provided Goldmark markdown processor
 func (l *linkExtension) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(parser.WithASTTransformers(

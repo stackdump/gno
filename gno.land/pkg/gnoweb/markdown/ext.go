@@ -64,4 +64,7 @@ func (e *gnoExtension) Extend(m goldmark.Markdown) {
 
 	// Add link extension with context
 	Links.Extend(m)
+
+	// Add pflow extension
+	Pflow.Extend(m)
 }
