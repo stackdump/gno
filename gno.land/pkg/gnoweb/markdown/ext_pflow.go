@@ -2,9 +2,6 @@ package markdown
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -16,6 +13,8 @@ import (
 )
 
 var (
+	KindPflowBlock = ast.NewNodeKind("PflowBlock")
+
 	webHost = &WebHost{
 		Base: "https://cdn.jsdelivr.net/gh/pflow-xyz/pflow-app@",
 		Tag:  "0.2.1",
@@ -28,9 +27,6 @@ type pflowBlock struct {
 	ast.BaseBlock
 	JSONContent string
 }
-
-// KindPflowBlock is the node kind for pflowBlock.
-var KindPflowBlock = ast.NewNodeKind("PflowBlock")
 
 // Kind implements Node.Kind.
 func (b *pflowBlock) Kind() ast.NodeKind {
@@ -45,7 +41,6 @@ func (b *pflowBlock) Dump(source []byte, level int) {
 	ast.DumpHelper(b, source, level, m, nil)
 }
 
-// pflowParser parses ```pflow blocks.
 type pflowParser struct{}
 
 func (p *pflowParser) Open(parent ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
@@ -53,7 +48,6 @@ func (p *pflowParser) Open(parent ast.Node, reader text.Reader, pc parser.Contex
 	if !bytes.HasPrefix(line, []byte("```pflow")) {
 		return nil, parser.NoChildren
 	}
-	fmt.Printf("pflowParser.Open: %s\n", line)
 	reader.AdvanceLine()
 	return &pflowBlock{}, parser.NoChildren
 }
@@ -69,28 +63,14 @@ func (p *pflowParser) Continue(node ast.Node, reader text.Reader, pc parser.Cont
 }
 
 func (p *pflowParser) Close(node ast.Node, reader text.Reader, pc parser.Context) {
-	block := node.(*pflowBlock)
-	var content bytes.Buffer
 	for {
 		line, segment := reader.PeekLine()
-		fmt.Printf("line: %s\n", line)
+		_ = segment
 		if line == nil || bytes.HasPrefix(line, []byte("```")) {
 			reader.AdvanceLine()
 			break
 		}
-		content.Write(line)
 		reader.AdvanceLine()
-
-		segments := block.Lines()
-		segments.Append(segment)
-
-		block.SetLines(segments)
-	}
-
-	fmt.Printf("pflowParser.Close: %s\n", content.String())
-	// Validate JSON content.
-	if err := json.Unmarshal(content.Bytes(), &map[string]interface{}{}); err == nil {
-		block.JSONContent = content.String()
 	}
 }
 
@@ -123,6 +103,9 @@ func (r *pflowRenderer) renderPflowBlock(w util.BufWriter, source []byte, node a
 		return ast.WalkContinue, nil
 	}
 	b.JSONContent = strings.TrimSuffix(b.JSONContent, "```")
+
+	// REVIEW: somehow we do not replace the existing behavior with ``` source blocks
+	// FIXME get rid of extra gray div
 	w.WriteString(Render(b.JSONContent))
 
 	return ast.WalkContinue, nil
@@ -150,25 +133,13 @@ func (h *WebHost) Cdn() string {
 	return h.Base + h.Tag + h.Path
 }
 
-func templateHtml(key, value string, s SourceProvider, path string) (out string) {
+func templateHtml(key, value string, s string) (out string) {
 	out = strings.ReplaceAll(htmlContent, key, value)
-	return strings.ReplaceAll(out, "{SOURCE}", s(path))
-}
-
-func Html(w *WebHost, s SourceProvider, path string) string {
-	return templateHtml("{CDN}", w.Cdn(), s, path)
-}
-
-type SourceProvider = func(path string) string
-
-func DataUrl(w *WebHost, s SourceProvider, path string) string {
-	return "data:text/html;utf8," + url.PathEscape(Html(w, s, path))
+	return strings.ReplaceAll(out, "{SOURCE}", s)
 }
 
 func Render(source string) string {
-	return templateHtml("{CDN}", webHost.Cdn(), func(_ string) string {
-		return source
-	}, "")
+	return templateHtml("{CDN}", webHost.Cdn(), source)
 }
 
 var htmlContent = `

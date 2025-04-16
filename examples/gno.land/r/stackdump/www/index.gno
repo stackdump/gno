@@ -23,5 +23,5 @@ var newSource = `
 }`
 
 func Render(path string) string {
-    return "```pflow\n" + newSource + "```"
+    return "```pflow\n" + newSource + "\n```"
 }
