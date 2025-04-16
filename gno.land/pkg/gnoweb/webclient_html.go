@@ -196,6 +196,7 @@ func (s *HTMLWebClient) RenderRealm(w io.Writer, u *weburl.GnoURL) (*RealmMeta, 
 	if err != nil {
 		return nil, err
 	}
+	// if matches /r/stackdump then use the unsafe HTML
 
 	ctxOpts := parser.WithContext(md.NewGnoParserContext(u))
 
@@ -212,6 +213,24 @@ func (s *HTMLWebClient) RenderRealm(w io.Writer, u *weburl.GnoURL) (*RealmMeta, 
 	}
 
 	return &meta, nil
+}
+
+func (s *HTMLWebClient) RenderHtml(w io.Writer, u *weburl.GnoURL) (*RealmMeta, error) {
+	const qpath = "vm/qrender"
+
+	pkgPath := strings.Trim(u.Path, "/")
+	data := fmt.Sprintf("%s/%s:%s", s.domain, pkgPath, u.EncodeArgs())
+
+	rawres, err := s.query(qpath, []byte(data))
+	if err != nil {
+		return nil, err
+	}
+	_, err = w.Write(rawres)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RealmMeta{}, nil
 }
 
 // query sends a query to the RPC client and returns the response

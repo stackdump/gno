@@ -32,6 +32,10 @@ type WebClient interface {
 	// content is safely handled and formatted.
 	RenderRealm(w io.Writer, u *weburl.GnoURL) (*RealmMeta, error)
 
+	// RenderHtml renders the content of a realm from a given path as raw HTML
+	// content is Unsafe. The method should ensures the rendered content is
+	RenderHtml(w io.Writer, u *weburl.GnoURL) (*RealmMeta, error)
+
 	// SourceFile fetches and writes the source file from a given
 	// package path, file name and if raw. The method should ensures the source
 	// file's content is safely handled and formatted.

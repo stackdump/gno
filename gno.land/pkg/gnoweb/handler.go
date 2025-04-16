@@ -172,8 +172,38 @@ func (h *WebHandler) GetPackageView(gnourl *weburl.GnoURL) (int, *components.Vie
 	// Ultimately get realm view
 	return h.GetRealmView(gnourl)
 }
-
 func (h *WebHandler) GetRealmView(gnourl *weburl.GnoURL) (int, *components.View) {
+	if strings.HasSuffix(gnourl.Path, "/www") {
+		return h.GetHtmlRealmView(gnourl)
+	}
+	return h.GetMdRealmView(gnourl)
+}
+
+func (h *WebHandler) GetHtmlRealmView(gnourl *weburl.GnoURL) (int, *components.View) {
+	var content bytes.Buffer
+
+	meta, err := h.Client.RenderHtml(&content, gnourl)
+	if err != nil {
+		if errors.Is(err, ErrRenderNotDeclared) {
+			return http.StatusOK, components.StatusNoRenderComponent(gnourl.Path)
+		}
+
+		h.Logger.Error("unable to render realm", "error", err, "path", gnourl.EncodeURL())
+		return GetClientErrorStatusPage(gnourl, err)
+	}
+
+	return http.StatusOK, components.RealmView(components.RealmData{
+		TocItems: &components.RealmTOCData{
+			Items: meta.Toc.Items,
+		},
+
+		// NOTE: `RenderRealm` should ensure that HTML content is
+		// sanitized before rendering
+		ComponentContent: components.NewReaderComponent(&content),
+	})
+}
+
+func (h *WebHandler) GetMdRealmView(gnourl *weburl.GnoURL) (int, *components.View) {
 	var content bytes.Buffer
 
 	meta, err := h.Client.RenderRealm(&content, gnourl)
