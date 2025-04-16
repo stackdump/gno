@@ -51,6 +51,7 @@ type PixelSetter = func(x, y, r, g, b int)
 type ImageApi interface {
 	Pixels(p PixelSetter)
 	Bounds() Bounds
+	Description() string
 }
 
 func Register(name string, imgHandler ImageApi) {
@@ -114,7 +115,7 @@ func Svg(name string) string {
 	builder := getImageApi(name)
 
 	img := &PixelImage{
-		Pixels: make([]ColorPixel, 50*50),
+		Pixels: make([]ColorPixel, GridWidth*GridWidth),
 		Bounds: builder.Bounds(),
 	}
 	builder.Pixels(img.SetPixel)
@@ -142,12 +143,13 @@ func Render(path string) (out string) {
 	}
 	builder := getImageApi(path)
 	img := &PixelImage{
-		Pixels: make([]ColorPixel, 50*50),
+		Pixels: make([]ColorPixel, GridWidth*GridWidth),
 		Bounds: builder.Bounds(),
 	}
 	builder.Pixels(img.SetPixel)
 	out = img.ToMarkdown()
 	out += "\n\n" + renderList(path) + "\n\n"
+	out += "#### " + builder.Description() + "\n\n"
 	out += "\n\n[PIXELFIED DAPP](./bmp:dapp)\n\n"
 
 	if len(args) == 2 {

@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+const GridWidth = 51
+// FIXME: getting this error rendering gnocap
+// review grid calculations
+// "node response error: slice index out of bounds: 2609
+
 type Bounds struct {
 	X1 int
 	Y1 int
@@ -33,7 +38,7 @@ func (image *PixelImage) SetPixel(x, y, r, g, b int) {
 	if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 {
 		return
 	}
-	image.Pixels[x*50+y] = ColorPixel{
+	image.Pixels[x*GridWidth+y] = ColorPixel{
 		X: x,
 		Y: y,
 		R: uint8(r),

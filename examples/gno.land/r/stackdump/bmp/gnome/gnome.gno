@@ -16,6 +16,10 @@ func (Gnome) Bounds() image.Bounds {
 	return image.Bounds{X1: 0, Y1: 0, X2: 50, Y2: 50}
 }
 
+func (Gnome) Description() string {
+    return "Gnome | A pixelated gnome"
+}
+
 func (Gnome) Pixels(p image.PixelSetter) {
 	p(9, 22, 254, 254, 254)
 	p(9, 23, 250, 251, 251)
