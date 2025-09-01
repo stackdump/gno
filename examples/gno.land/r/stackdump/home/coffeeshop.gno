@@ -52,6 +52,18 @@ func init() {
     }
     register("Coffee Shop Workflow Net No Places", workflowNoPlaces, append(keywords, "workflow", "workflow_net", "no_places")...)
 
+	shopRunHalt := coffeeShopWorkflowNetWithRunHalt()
+	shopRunHalt.Binding = func(_ string) string {
+		return "This is the Coffee Shop Workflow Net with Run and Halt actions.\n\n\n" + shopRunHalt.Markdown()
+	}
+	register("Coffee Shop Workflow Net Run/Halt", shopRunHalt, "coffee", "shop", "workflow", "run", "halt")
+
+	transitionsOnlyRunHalt := coffeeShopWorkflowNetWithRunHalt().ForgetPlaces()
+	transitionsOnlyRunHalt.Binding = func(_ string) string {
+	    return "This is the Coffee Shop Workflow Net with Run and Halt actions, without places. \n\n\n" + transitionsOnlyRunHalt.Markdown()
+	}
+	register("Coffee Shop Workflow Net Run/Halt No Places", transitionsOnlyRunHalt, "coffee", "shop", "workflow", "run", "halt", "no_places")
+
 }
 
 func coffeeShop() *mm.Model {
@@ -93,6 +105,7 @@ func coffeeShop() *mm.Model {
 		{Source: "Sent", Target: "Credit"},
 		{Source: "Credit", Target: "Payment"},
 		{Source: "PourCoffee", Target: "Payment", Inhibit: true},
+		{Source: "BoiledWater", Target: "GrindBeans", Inhibit: true}, // add prereq to fix workflow net
 	}
 	return mm.New(places, transitions, arrows)
 }
@@ -134,3 +147,31 @@ func coffeeShopWorkflowNet() *mm.Model {
 
 	return baseModel
 }
+
+// add Run and Halt transitions to the workflow net should run -> Start and Exit -> Halt
+func coffeeShopWorkflowNetWithRunHalt() *mm.Model {
+    workflowNet := coffeeShopWorkflowNet()
+
+    // Add Run transition
+    workflowNet.Transitions["Run"] = mm.Transition{
+        Label: "Run", Offset: 1, X: 180, Y: 20,
+    }
+
+    // Add Halt transition
+    workflowNet.Transitions["Halt"] = mm.Transition{
+        Label: "Halt", Offset: 1, X: 380, Y: 300,
+    }
+
+    // Connect Run to Start
+    workflowNet.Arrows = append(workflowNet.Arrows, mm.Arrow{
+        Source: "Run", Target: "Start",
+    })
+
+    // Connect Exit to Halt
+    workflowNet.Arrows = append(workflowNet.Arrows, mm.Arrow{
+        Source: "Exit", Target: "Halt",
+    })
+
+    return workflowNet
+}
+
