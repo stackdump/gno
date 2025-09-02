@@ -2,7 +2,7 @@
 
 This document outlines the different structural and semantic variations of the **Coffee Shop** Petri net model, with explanations of their purpose and how each transformation aids different forms of analysis.
 
-[![pflow](https://pflow.dev/img/zb2rhasvXMxcPwPpRf8TLpQwW74NPBe1DwLrFQoUSMEnwgH2t.svg)](https://pflow.dev/p/zb2rhasvXMxcPwPpRf8TLpQwW74NPBe1DwLrFQoUSMEnwgH2t/)
+[![pflow](https://pflow.dev/img/zb2rhZmNx6quCfUkFdMzaTvdof9CzBLan8ojejHqNDfhn1nKo.svg)](https://pflow.dev/p/zb2rhZmNx6quCfUkFdMzaTvdof9CzBLan8ojejHqNDfhn1nKo/)
 
 ---
 

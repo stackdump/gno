@@ -9,6 +9,8 @@ This is a model of a coffee shop process, which includes the following steps:
 
 `
 
+// TODO: fix errors compared w/ https://pflow.dev/p/zb2rhZmNx6quCfUkFdMzaTvdof9CzBLan8ojejHqNDfhn1nKo
+
 func init() {
 	coffeeShopModel := coffeeShop()
 	coffeeShopModel.Binding = func(_ string) string {
