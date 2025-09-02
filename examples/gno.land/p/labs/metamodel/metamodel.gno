@@ -97,26 +97,6 @@ func (arrow Arrow) String() string {
     return ufmt.Sprintf("%s --> %s [%s]", arrow.Source, arrow.Target, weightStr)
 }
 
-func (arrow Arrow) IsZero() bool {
-    return arrow.Source == "" && arrow.Target == "" && len(arrow.Weight) == 0 && !arrow.Inhibit && arrow.Binding == nil
-}
-
-func (arrow Arrow) Equals(other Arrow) bool {
-    if arrow.Source != other.Source || arrow.Target != other.Target || arrow.Inhibit != other.Inhibit {
-        return false
-    }
-    if len(arrow.Weight) != len(other.Weight) {
-        return false
-    }
-    for i := range arrow.Weight {
-        if arrow.Weight[i] != other.Weight[i] {
-            return false
-        }
-    }
-    // Note: Binding comparison is omitted for simplicity.
-    return true
-}
-
 func (arrow Arrow) ForgetObjects() Arrow {
     return Arrow{
         Source:  arrow.Source,
@@ -178,9 +158,6 @@ type Model struct {
 	Binding     any                   // Optional binding for the model.
 	RenderOpts  map[string]any        // Rendering options for the model.
 }
-
-// l1 := New(m.Objects, m.Places) //.Cid()
-// l2 :  New(l1, Arrows{})
 
 func New(inputs ...any) *Model {
 	m := &Model{
@@ -517,10 +494,23 @@ func (model *Model) Markdown() string {
 	return sb.String()
 }
 
+func assertDollarSignVar(name string) {
+    if len(name) == 0 || name[0] != '$' {
+        panic("names must start with $")
+    }
+    for i, ch := range name[1:] {
+        if !(ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9' && i > 0)) {
+            panic("names must be valid identifiers")
+        }
+    }
+}
+
+func AssertValidPortName(name string) {
+    assertDollarSignVar(name)
+}
+
 func AssertValidObjectName(name string) {
-	if !strings.HasPrefix(name, "$") {
-		panic("Invalid object name: " + name + ". Object names must start with '$'.")
-	}
+    assertDollarSignVar(name)
 }
 
 func (model *Model) Cid() string {
@@ -530,7 +520,6 @@ func (model *Model) Cid() string {
 func (model *Model) IdentityHash() string {
 	var elements []string
 
-	sort.Strings(model.Objects)
 	for _, obj := range model.Objects {
 		elements = append(elements, hashString(obj))
 	}

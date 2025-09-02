@@ -13,14 +13,23 @@ var pflowLink = `
 [![pflow](https://pflow.dev/img/zb2rhdVMFVdcBLYqpMJh8Vk4awKUf5GeWsuURmeTxRghdAmQx.svg)](https://pflow.dev/p/zb2rhdVMFVdcBLYqpMJh8Vk4awKUf5GeWsuURmeTxRghdAmQx/)
 `
 
-const version = "bafkreie4ceqfi5rnae75u2dp22utnwr6yrhvz5p5uvalgrrxfwwrvet2nq"
 
 func init() {
-	m := GRC20(modelOpts)
-	if m.Cid() != version {
-		panic("model version mismatch")
+    defaultCid := GRC20(modelOpts).Cid()
+    if defaultCid != "bafkreihv25z3g7w54mw55vxyeurjao76nlqhowrrmiibym575uatuayxl4" {
+		panic("model version mismatch: " + defaultCid)
 	}
+	forgetObjectsCid := GRC20(modelOpts).ForgetObjects().Cid()
+	if forgetObjectsCid != "bafkreidcy54crfmtx4odm2i6doj4dhuevt3leg525yilkfco4gldaamfly" {
+	    panic("forget objects mismatch: " + forgetObjectsCid)
+    }
 }
+
+var monotoneNote = `
+> A **monotone** net is one where tokens have **no named color**,
+> but still participate in transitions according to the net's structure.
+
+`
 
 func Render(path string) string {
 	opts := map[string]any{}
@@ -33,7 +42,7 @@ func Render(path string) string {
 	case "allow":
 		opts["objects"] = []string{Allow, Token} // "Allow" oriented view
 	case "monotone":
-		return RenderModel(GRC20(opts).ForgetObjects(), path) // reduce to monotone view
+		return RenderModel(GRC20(opts).ForgetObjects(), path)
 	case "pflow":
 		return RenderModel(nil, path)
 	default:
@@ -84,6 +93,10 @@ func RenderModel(m *mm.Model, path string) string {
 		sb.WriteString(pflowLink)
 		sb.WriteString("\n\n")
 	} else {
+	    if path == "monotone" {
+            sb.WriteString(monotoneNote)
+            sb.WriteString("\n\n")
+        }
 		sb.WriteString("\n\n Model ID: " + m.Cid() + "\n\n")
 		sb.WriteString(m.Markdown())
 	}
