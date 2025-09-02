@@ -25,12 +25,10 @@ var (
 		"allowance_initial": 0,
 		"minter_initial":    1,
 		"objects":           []string{Token, Allow}, // "Token" oriented view
+		"BasePath":          "/r/labs/grc20",
 	}
 )
 
-func init() {
-	modelOpts["objects"] = []string{Allow, Token} // invert view - "Allow" oriented view
-}
 
 // GRC20 returns a single model that matches GRC20 semantics.
 func GRC20(opts map[string]any) *mm.Model {
@@ -38,11 +36,11 @@ func GRC20(opts map[string]any) *mm.Model {
 	// Helper to get integer options with defaults
 	getIntOpt := func(key string, def int) int64 {
 		if val, ok := opts[key]; ok {
-			if intval, ok := val.(int); ok {
-				return int64(intval)
+			if intVal, ok := val.(int); ok {
+				return int64(intVal)
 			}
-			if intval, ok := val.(int64); ok {
-				return intval
+			if intVal, ok := val.(int64); ok {
+				return intVal
 			}
 		}
 		return int64(def)

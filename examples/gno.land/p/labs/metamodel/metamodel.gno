@@ -17,6 +17,14 @@ import (
 // TokenType represents multiple token types as a slice of integers.
 type TokenType []int64 // REVIEW: should this be int256
 
+func (tt TokenType) Sum() int64 {
+    var sum int64
+    for _, v := range tt {
+        sum += v
+    }
+    return sum
+}
+
 func (tt TokenType) String() string {
 	if len(tt) == 0 {
 		return "[]"
@@ -79,6 +87,44 @@ type Arrow struct {
 	Weight  TokenType // Weight for each token type used in the model.
 	Inhibit bool      // Indicates if the arc inhibits the transition.
 	Binding any       // Optional binding for the arc.
+}
+
+func (arrow Arrow) String() string {
+    weightStr := fmtWeight(arrow.Weight)
+    if arrow.Inhibit {
+        return ufmt.Sprintf("%s -|> %s [%s]", arrow.Source, arrow.Target, weightStr)
+    }
+    return ufmt.Sprintf("%s --> %s [%s]", arrow.Source, arrow.Target, weightStr)
+}
+
+func (arrow Arrow) IsZero() bool {
+    return arrow.Source == "" && arrow.Target == "" && len(arrow.Weight) == 0 && !arrow.Inhibit && arrow.Binding == nil
+}
+
+func (arrow Arrow) Equals(other Arrow) bool {
+    if arrow.Source != other.Source || arrow.Target != other.Target || arrow.Inhibit != other.Inhibit {
+        return false
+    }
+    if len(arrow.Weight) != len(other.Weight) {
+        return false
+    }
+    for i := range arrow.Weight {
+        if arrow.Weight[i] != other.Weight[i] {
+            return false
+        }
+    }
+    // Note: Binding comparison is omitted for simplicity.
+    return true
+}
+
+func (arrow Arrow) ForgetObjects() Arrow {
+    return Arrow{
+        Source:  arrow.Source,
+        Target:  arrow.Target,
+        Weight:  TokenType{arrow.Weight.Sum()},
+        Inhibit: arrow.Inhibit,
+        Binding: arrow.Binding,
+    }
 }
 
 // Transition represents a transition in the Petri net.
@@ -776,3 +822,42 @@ func (model *Model) ForgetPlaces() *Model {
 - Baez, J. C., & Master, J. (2018). Open Petri Nets. arXiv preprint.
 - Baez, J. C., & Master, J. (2020). Open Petri Nets. Mathematical Structures in Computer Science, 30(3), 314–341. [Compositional semantics via double categories]
 */
+
+
+/*
+// ForgetObjects projects a P/T net onto a single generic object type.
+// Semantics:
+// - Collapse all object-specific token types into a single generic type.
+// - For places, sum initial tokens and capacities across all types.
+// - For arrows, sum weights across all types.
+// Use when:
+// - You want a simplified view ignoring object distinctions, e.g., for coarse analysis or visualization
+// Notes:
+// - Drops object-specific details, preserving only total counts.
+// - Preserves topological structure but not object-specific behavior.
+*/
+func(model *Model) ForgetObjects() *Model {
+    newModel := &Model{
+        Places:      map[string]Place{},
+        Transitions: map[string]Transition{},
+        Arrows:      []Arrow{},
+    }
+
+    // Copy places
+    for label, place := range model.Places {
+        place.Initial = TokenType{place.Initial.Sum()}
+        place.Capacity = TokenType{place.Capacity.Sum()}
+        newModel.Places[label] = place
+    }
+
+    // Copy transitions
+    for label, transition := range model.Transitions {
+        newModel.Transitions[label] = transition
+    }
+    // Copy arrows with collapsed weights
+    for _, arrow := range model.Arrows {
+        newModel.Arrows = append(newModel.Arrows, arrow.ForgetObjects())
+    }
+
+    return newModel
+}
