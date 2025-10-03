@@ -141,13 +141,9 @@ func Register(i interface{}) string {
 
 var rows = []string{
 	Register(AibLabs),
-	Register(AllInBits),
-	Register(Atone),
 	Register(Event),
 	Register(Glyph),
 	Register(LogoVerse),
-	//Register(officehours.OfficeHours{}), // FIXME
-	Register(Photon),
 }
 
 var columns = []string{"cid", "name", "description", "committer"}
@@ -359,9 +355,9 @@ func renderObject(path string, obj interface{}) string {
 
 func renderTable() string {
 	var sb strings.Builder
-	sb.WriteString("## Logoverse Registry\n\n")
+	sb.WriteString("## Labs Home\n\n")
 	sb.WriteString("\n![svg image](" + LogoVerse.DataUrl() + ")\n\n")
-	sb.WriteString(LogoVerse.Introduction() + "\n")
+	sb.WriteString("A collection of projects by [AIB Labs](?glyph=AIB+Labs)\n\n")
 
 	sb.WriteString("|")
 	for _, col := range columns {

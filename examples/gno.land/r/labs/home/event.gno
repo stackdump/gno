@@ -223,3 +223,7 @@ func (EventObj) Flyer(obj ...interface{}) *eve.Flyer {
 	f.SetRenderOpts(Event.renderOpts())
 	return f
 }
+
+func (EventObj) Render(path string) string {
+    return "## Flyer\n\n {Flyer-BODY}"
+}
