@@ -8,7 +8,7 @@ type logoVerse struct{}
 
 var LogoverseContext = eve.JsonLDMap{
 	"@version":  1.1,
-	"logoverse": "/r/labs000/logoverse#",
+	"logoverse": "/r/labs/home",
 
 	// Term definitions
 	"Glyph": "logoverse:Glyph",
@@ -54,14 +54,6 @@ func (logoVerse) SVG() string {
 	return AibLabs.SVG()
 }
 
-func (logoVerse) URL(params ...string) string {
-	url := "/r/labs000/logoverse"
-	if len(params) > 0 {
-		return url + params[0]
-	}
-	return url
-}
-
 func (logoVerse) JsonLD() eve.JsonLDMap {
 	return eve.JsonLDMap{
 		"@context":    []any{"https://schema.org", LogoverseContext},
@@ -69,9 +61,9 @@ func (logoVerse) JsonLD() eve.JsonLDMap {
 		"@id":         "{{CID}}", // filled in by projection
 		"name":        "Logoverse",
 		"description": LogoVerse.Description(),
-		"url":      LogoVerse.URL("?glyph=Logoverse&embed=page"),
-		"banner":      LogoVerse.URL("?glyph=Logoverse&embed=img"),
-		"thumbnail":   LogoVerse.URL("?glyph=Logoverse&embed=thumbnail"),
+		"url":      "?glyph=Logoverse&embed=page",
+		"banner":      "?glyph=Logoverse&embed=img",
+		"thumbnail":   "?glyph=Logoverse&embed=thumbnail",
 		"author": map[string]any{
 			"@type": "Organization",
 			"name":  "AllInBits",
@@ -81,7 +73,7 @@ func (logoVerse) JsonLD() eve.JsonLDMap {
 		"hasPart": map[string]any{
 			"@type": "WebPage",
 			"name":  "Glyph",
-			"url":   "/r/labs000/logoverse?glyph=Glyph",
+			"url":   "?glyph=Glyph",
 			"about": "Glyph is the fundamental building block of the Logoverse.",
 		},
 	}
@@ -97,7 +89,7 @@ func (logoVerse) Description() string {
 
 func (logoVerse) Introduction() string {
 	return `## What is the Logoverse?
-The [**Logoverse**](/r/labs000/logoverse?glyph=Logoverse) is like a digital universe made up of tiny building blocks called **objects**.
+The [**Logoverse**](?glyph=Logoverse&embed=page) is like a digital universe made up of tiny building blocks called **objects**.
 Each object has a permanent identity (a **CID**) and can be combined with others to form bigger ideas.
 
 - **Immutable:** once created, objects never change.

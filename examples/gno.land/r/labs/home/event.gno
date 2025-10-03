@@ -115,8 +115,8 @@ func (EventObj) JsonLD() eve.JsonLDMap {
 		"@type":                "WebPage",
 		"name":                 "Event",
 		"description":          descr,
-		"banner":               LogoVerse.URL("?glyph=Event&embed=img"),
-		"thumbnail":            LogoVerse.URL("?glyph=Event&embed=thumbnail"),
+		"banner":               "?glyph=Event&embed=img",
+		"thumbnail":            "?glyph=Event&embed=thumbnail",
 		"representativeOfPage": true,
 		"url":                  "/r/events000",
 		"@graph": []any{
