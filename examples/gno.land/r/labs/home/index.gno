@@ -10,6 +10,7 @@ import (
 
 	"gno.land/p/nt/avl"
 	eve "gno.land/p/eve/event/component"
+	"gno.land/r/labs/officehours"
 )
 
 var registry = avl.NewTree()
@@ -147,6 +148,7 @@ var rows = []string{
 	Register(Event),
 	Register(Glyph),
 	Register(LogoVerse),
+	Register(officehours.OfficeHoursObj),
 }
 
 var columns = []string{"cid", "name", "description", "committer"}

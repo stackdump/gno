@@ -2,6 +2,7 @@ package event
 
 import (
 	"net/url"
+	"chain"
 	"chain/runtime"
 	"strings"
 	"time"

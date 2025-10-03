@@ -93,7 +93,7 @@ event RegisteredGlyph {
 
 ```gno
 
-import logo "gno.land/r/labs000/logoverse"
+import logo "gno.land/r/labs/home"
 
 struct PflowGlyph {}
 

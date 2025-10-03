@@ -103,11 +103,11 @@ func (ld JsonLDMap) MarkdownLinks() string {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
 				} else if k == "thumbnail" {
-					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "/r/") || strings.HasPrefix(licStr, "https://")) {
+					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "?") || strings.HasPrefix(licStr, "https://")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
 				} else if k == "banner" {
-					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "/r/") || strings.HasPrefix(licStr, "https://")) {
+					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "?") || strings.HasPrefix(licStr, "https://")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
 				} else if (k == "parentId" || k == "seal") {
