@@ -54,10 +54,10 @@ func commitProjection(emitOnly bool, base, path, seal string) (cid string) {
 	if seal == "" {
 		panic("seal parameter is required")
 	}
-	if !isCIDv1(base) {
+	if !eve.IsCIDv1(base) {
 		panic("invalid base: not a CIDv1")
 	}
-	if !isCIDv1(seal) {
+	if !eve.IsCIDv1(seal) {
 		panic("invalid seal: not a CIDv1")
 	}
 	v, found := registry.Get(base)
@@ -107,7 +107,7 @@ func Register(i interface{}) string {
 		panic("object must implement eve.LogoGraph interface")
 	}
 	newCid := ldg.Cid()
-	if !isCIDv1(newCid) {
+	if !eve.IsCIDv1(newCid) {
 		panic("object must have a likely CIDv1 (base32, 'baf...' style)")
 	}
 
@@ -139,6 +139,9 @@ func Register(i interface{}) string {
 	return newCid
 }
 
+// TODO: rewrite to control this after deployment
+// registering a new object w/ the same name after deployment, should replace the old one in the table
+// but not remove the old one from the registry, so that old links still work
 var rows = []string{
 	Register(AibLabs),
 	Register(Event),
@@ -183,7 +186,7 @@ func Render(path string) string {
 		return renderTable()
 	}
 	if submit, hasSubmit := q["submit"]; hasSubmit && submit[0] == "register" {
-		if base, hasBase := q["base"]; hasBase && isCIDv1(base[0]) {
+		if base, hasBase := q["base"]; hasBase && eve.IsCIDv1(base[0]) {
 			if baseObj, ok := registry.Get(base[0]); ok {
 				if ed, isEd := baseObj.(Record).Object.(eve.Editable); isEd {
 					form := ed.RenderForm(path)
@@ -260,7 +263,7 @@ func Render(path string) string {
 	}
 
 	if seal, ok := q["seal"]; ok && isProj {
-		if !isCIDv1(seal[0]) {
+		if !eve.IsCIDv1(seal[0]) {
 			return "invalid seal: not a CIDv1"
 		}
 		cid := proj.Compose(obj).Cid()
@@ -386,22 +389,6 @@ func capitalize(s string) string {
 	}
 	return string(s[0]-32) + s[1:]
 }
-
-func isCIDv1(s string) bool {
-	if len(s) != 59 {
-		return false
-	}
-	for _, r := range s {
-		if !('a' <= r && r <= 'z' || '2' <= r && r <= '7') { // base32 alphabet
-			return false
-		}
-	}
-	if !strings.HasPrefix(s, "bafkrei") {
-		return false
-	}
-	return true
-}
-
 
 func renderPage(path string, object interface{}) string {
     template := object.(eve.PageTemplate)
