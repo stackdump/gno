@@ -391,7 +391,12 @@ func capitalize(s string) string {
 }
 
 func renderPage(path string, object interface{}) string {
-    template := object.(eve.PageTemplate)
-    cid := object.(eve.LogoGraph).Cid()
-    return template.Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)"
+    var sb strings.Builder
+    lg := object.(eve.LogoGraph)
+    d := lg.JsonLD()
+    sb.WriteString("### " + d.StringVal("name") + "\n\n")
+    sb.WriteString(lg.Thumbnail() + "\n\n")
+    cid := lg.Cid()
+    sb.WriteString(object.(eve.PageTemplate).Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)")
+    return sb.String()
 }
