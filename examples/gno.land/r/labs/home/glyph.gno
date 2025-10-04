@@ -1,7 +1,7 @@
 package logoverse
 
 import (
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
 
 type glyphObj struct {
@@ -206,7 +206,7 @@ Glyphs are designed to be **simple, durable, and easy to share**, so anyone can 
 
 Glyphs can be projected into different formats, like SVG images or JSON-LD data, making them versatile for various applications.
 
-If a Glyph implements the [**eve.PageTemplate**](/p/eve/event/component$source&file=logograph.gno) interface, it can also be rendered as a page.
+If a Glyph implements the [**eve.PageTemplate**](/p/eve/component$source&file=logograph.gno) interface, it can also be rendered as a page.
 
 `
 }

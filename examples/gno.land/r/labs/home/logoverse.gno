@@ -1,7 +1,7 @@
 package logoverse
 
 import (
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
 
 type logoVerse struct{}

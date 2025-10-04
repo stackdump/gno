@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"time"
 
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
 
 type EventObj struct {

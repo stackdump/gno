@@ -10,42 +10,8 @@ import (
 	"time"
 
 	"gno.land/p/nt/avl"
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
-// FIXME: Consider relocating eve/event/component to /eve/component
-// leave event-specific registry + utils in eve/event
-
-type Api interface {
-	AddOrganizer(addr address)
-	AddProposer(addr, sender address)
-	AddReviewer(addr, sender address)
-	AddSpeaker(addr address)
-	AdminRemoveRole(role string, addr address)
-	AdminSetRole(role string, addr address)
-	AssertAtLeastRole(role string, sender address)
-	HasRole(role string, addr address) bool
-	JoinAsAttendee()
-	JoinWaitlist()
-	ListRoles() []string
-	// REVIEW: should setLive Event be part of the API? - we may not use due to versioning issues
-	PublishEvent(evt *Event, opts map[string]interface{}) string
-	RegisterEvent(evt *Event, opts map[string]interface{}) string
-	RemoveOrganizer(addr address)
-	RemoveProposer(addr, sender address)
-	RemoveReviewer(addr, sender address)
-	RemoveSelfAsAttendee()
-	RemoveSelfFromWaitlist()
-	RemoveSpeaker(addr address)
-	Render(path string) string
-	RenderAcl(path string) string
-	RenderList(role string) string
-	ResetRoles()
-	RoleExists(role string) bool
-	SetContent(key, markdown string)
-	SetPatchLevel(level int)
-	SetRoleHandler(role string, fn func(string) bool)
-	UnsetRoleHandler(role string)
-}
 
 type Storage struct {
 	Sessions  *avl.Tree
@@ -53,9 +19,6 @@ type Storage struct {
 	Locations *avl.Tree
 }
 
-// REVIEW: Event / Flyer are duals of each other.
-// we return Flyer objects to non-admin users - (lacking any edit methods)
-// the event object is protected for edits only by patching from specific 'sub-realms'
 type Event struct {
 	Name           string
 	Location       *eve.Location

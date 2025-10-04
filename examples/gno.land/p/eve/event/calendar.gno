@@ -9,7 +9,7 @@ import (
 
 	"gno.land/p/nt/avl"
 	"gno.land/p/nt/ufmt"
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
 
 // -----------------------------------------------------------------------------

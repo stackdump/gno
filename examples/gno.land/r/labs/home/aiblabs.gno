@@ -3,7 +3,7 @@ package logoverse
 import (
 	"net/url"
 
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 )
 
 type aibLabs struct{}

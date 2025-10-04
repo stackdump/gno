@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"gno.land/p/eve/event"
-	eve "gno.land/p/eve/event/component"
+	eve "gno.land/p/eve/component"
 	"gno.land/p/moul/txlink"
 )
 
