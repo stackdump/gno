@@ -40,7 +40,7 @@ func IcsCalendarFile(path string, a *Flyer) string {
 
 	switch format {
 	case "json":
-		b.WriteString(a.ToJson())
+		b.WriteString(a.Json())
 		return b.String()
 
 	case "ics":
@@ -98,7 +98,7 @@ func IcsCalendarFile(path string, a *Flyer) string {
 			if !include(id) {
 				continue
 			}
-			w(s.ToMarkdown())
+			w(s.Markdown())
 		}
 		return b.String()
 	}

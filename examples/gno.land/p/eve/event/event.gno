@@ -159,7 +159,7 @@ func (evt *Event) SetRenderOpts(opts map[string]interface{}) {
 	}
 }
 
-func (evt *Event) ToAnchor() string {
+func (evt *Event) Anchor() string {
 	return eve.StringToAnchor(evt.Name)
 }
 
@@ -193,7 +193,7 @@ func (evt *Event) RenderContent(path string, blocks []*eve.Content) string {
 }
 
 func (evt *Event) Cid() string {
-	sha := hashString(evt.Flyer().ToJsonLD())
+	sha := hashString(evt.Flyer().JsonLD())
 	return shaToCid(sha)
 }
 

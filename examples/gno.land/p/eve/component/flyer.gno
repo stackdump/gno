@@ -28,12 +28,12 @@ func (a *Flyer) Flyer() *Flyer {
 	return a
 }
 
-func (a *Flyer) ToAnchor() string {
+func (a *Flyer) Anchor() string {
 	return StringToAnchor(a.Name)
 }
 
-// ToMarkdown converts the Flyer to a Markdown representation (with optional additional content).
-func (a *Flyer) ToMarkdown(body ...Content) string {
+// Markdown converts the Flyer to a Markdown representation (with optional additional content).
+func (a *Flyer) Markdown(body ...Content) string {
 	markdown := "## " + a.Name + "\n\n"
 
 	if _, ok := a.RenderOpts()["Location"]; ok && a.Location != nil {
@@ -88,7 +88,7 @@ func (a *Flyer) ToMarkdown(body ...Content) string {
 	for date, sessions := range sessionsByDate {
 		markdown += "### " + date + "\n\n"
 		for _, session := range sessions {
-			markdown += session.ToMarkdown()
+			markdown += session.Markdown()
 		}
 	}
 
@@ -99,14 +99,14 @@ func (a *Flyer) ToMarkdown(body ...Content) string {
 
 	for _, session := range a.Sessions {
 		// Collect unique speakers
-		speakerMarkdown := session.Speaker.ToMarkdown()
+		speakerMarkdown := session.Speaker.Markdown()
 		if !speakersSet[speakerMarkdown] {
 			speakersSet[speakerMarkdown] = true
 			speakersMarkdown += speakerMarkdown + "\n***\n"
 		}
 
 		// Collect unique locations
-		locationMarkdown := session.Location.ToMarkdown()
+		locationMarkdown := session.Location.Markdown()
 		if !locationsSet[locationMarkdown] {
 			locationsSet[locationMarkdown] = true
 			locationsMarkdown += locationMarkdown + "\n***\n"
@@ -120,24 +120,24 @@ func (a *Flyer) ToMarkdown(body ...Content) string {
 		markdown += "## Locations\n\n" + locationsMarkdown
 	}
 	if _, ok := a.RenderOpts()["SvgFooter"]; ok {
-		markdown += "\n\n[![Flyer SVG](" + a.ToSvgDataUrl() + ")](" + a.ToAnchor() + ")\n\n"
+		markdown += "\n\n[![Flyer SVG](" + a.SvgDataUrl() + ")](" + a.Anchor() + ")\n\n"
 	}
 
 	return markdown
 }
 
-func (a *Flyer) ToJson() string {
+func (a *Flyer) Json() string {
 	json := "{\n"
 	json += "\"Name\":\"" + a.Name + "\",\n"
 	if a.Location != nil && a.Location.Name != "" {
-		json += "\"Location\":" + a.Location.ToJson() + ",\n"
+		json += "\"Location\":" + a.Location.Json() + ",\n"
 	}
 	json += "\"StartDate\":\"" + FormatDate(a.StartDate) + "\",\n"
 	json += "\"EndDate\":\"" + FormatDate(a.EndDate) + "\",\n"
 	json += "\"Description\":\"" + a.Description + "\",\n"
 	json += "\"Sessions\":[\n"
 	for i, session := range a.Sessions {
-		json += session.ToJson()
+		json += session.Json()
 		if i < len(a.Sessions)-1 {
 			json += ",\n"
 		}
@@ -146,14 +146,14 @@ func (a *Flyer) ToJson() string {
 	return json
 }
 
-func (a *Flyer) ToSVG() string {
+func (a *Flyer) SVG() string {
 	y := 40
-	fragment := a.ToSVGFragment(&y)
+	fragment := a.SVGFragment(&y)
 	height := ufmt.Sprintf("%d", y)
 	return SvgHeading("600", height) + fragment + "</svg>"
 }
 
-func (a *Flyer) ToSVGFragment(y *int) string {
+func (a *Flyer) SVGFragment(y *int) string {
 	svg := "<rect width=\"100%\" height=\"100%\" fill=\"#eeeeee\" rx=\"15\"/>"
 	svg += RenderSVGLine(y, "title", "", a.Name)
 	*y += 10
@@ -178,14 +178,14 @@ func (a *Flyer) ToSVGFragment(y *int) string {
 	svg += RenderSVGLine(y, "text", "", a.Description)
 	*y += 40
 	for _, s := range a.Sessions {
-		svg += s.ToSVGFragment(y)
+		svg += s.SVGFragment(y)
 		*y += 20
 	}
 	return svg
 }
 
-func (a *Flyer) ToSvgDataUrl() string {
-	return "data:image/svg+xml;utf8," + url.PathEscape(a.ToSVG())
+func (a *Flyer) SvgDataUrl() string {
+	return "data:image/svg+xml;utf8," + url.PathEscape(a.SVG())
 }
 
 func (a *Flyer) RenderOpts() map[string]interface{} {
@@ -196,11 +196,11 @@ func (a *Flyer) SetRenderOpts(opts map[string]interface{}) {
 	a.renderOpts = opts
 }
 
-func (a *Flyer) ToJsonLD() string {
+func (a *Flyer) JsonLD() string {
 	return EventJsonLD("?format=jsonld", a)
 }
 
-func (a *Flyer) ToIcs() string {
+func (a *Flyer) Ics() string {
 	return IcsCalendarFile("?format=ics", a)
 }
 
@@ -219,5 +219,5 @@ func (a *Flyer) RenderContent(path string, blocks []*Content) string {
 }
 
 func (a *Flyer) Cid() string {
-	return ShaToCid(HashString(a.ToJsonLD()))
+	return ShaToCid(HashString(a.JsonLD()))
 }

@@ -15,7 +15,7 @@ import (
 // Interfaces
 
 type IcsFileProvider interface {
-	ToIcs() string // returns the content of the ICS file
+	Ics() string // returns the content of the ICS file
 }
 
 type ContentProvider interface {
@@ -23,23 +23,23 @@ type ContentProvider interface {
 }
 
 type JsonLdProvider interface {
-	ToJsonLD() string // schema.org compatible
+	JsonLD() string // schema.org compatible
 }
 
 type JsonProvider interface {
-	ToJson() string
+	Json() string
 }
 
 type MarkdownProvider interface {
-	ToMarkdown(...Content) string
+	Markdown(...Content) string
 }
 
 type Component interface {
-	ToAnchor() string
-	ToMarkdown(...Content) string
-	ToJson() string // freeform JSON representation
-	ToSVG() string
-	ToSvgDataUrl() string
+	Anchor() string
+	Markdown(...Content) string
+	Json() string // freeform JSON representation
+	SVG() string
+	SvgDataUrl() string
 	RenderOpts() map[string]interface{}
 }
 
@@ -119,7 +119,7 @@ func RenderPage(path string, c interface{}, body ...Content) string {
 	case implementsContentProvider(c):
 		return c.(ContentProvider).Render(path)
 	case implementsMarkdownProvider(c):
-		return c.(MarkdownProvider).ToMarkdown(body...)
+		return c.(MarkdownProvider).Markdown(body...)
 	default:
 		panic("RenderPage: unsupported type")
 	}
@@ -138,14 +138,14 @@ func RenderComponent(path string, c Component) string {
 	var sb strings.Builder
 	switch u.Query().Get("format") {
 	case "json":
-		sb.WriteString("```json\n" + c.ToJson() + "\n```")
+		sb.WriteString("```json\n" + c.Json() + "\n```")
 	case "frame":
-		sb.WriteString(c.ToJson())
+		sb.WriteString(c.Json())
 	default:
-		sb.WriteString(c.ToMarkdown())
+		sb.WriteString(c.Markdown())
 	}
 
-	sb.WriteString("\n[![" + c.ToAnchor() + "](" + c.ToSvgDataUrl() + ")](" + c.ToAnchor() + ")\n\n---\n\n")
+	sb.WriteString("\n[![" + c.Anchor() + "](" + c.SvgDataUrl() + ")](" + c.Anchor() + ")\n\n---\n\n")
 	return sb.String()
 }
 
@@ -371,14 +371,14 @@ func renderBody(body []Content) string {
 
 func renderIcsFile(c interface{}, body []Content) string {
 	var sb strings.Builder
-	sb.WriteString("```ics\n" + c.(IcsFileProvider).ToIcs() + "\n```")
+	sb.WriteString("```ics\n" + c.(IcsFileProvider).Ics() + "\n```")
 	sb.WriteString(renderBody(body))
 	return sb.String()
 }
 
 func renderJsonLD(c interface{}, body []Content) string {
 	var sb strings.Builder
-	sb.WriteString("```jsonld\n" + c.(JsonLdProvider).ToJsonLD() + "\n```")
+	sb.WriteString("```jsonld\n" + c.(JsonLdProvider).JsonLD() + "\n```")
 	sb.WriteString(renderBody(body))
 	return sb.String()
 }
@@ -386,7 +386,7 @@ func renderJsonLD(c interface{}, body []Content) string {
 // Show data as Json next to the body content:w
 func renderJson(c interface{}, body []Content) string {
 	var sb strings.Builder
-	sb.WriteString("```\n\n" + c.(JsonProvider).ToJson() + "\n\n```")
+	sb.WriteString("```\n\n" + c.(JsonProvider).Json() + "\n\n```")
 	sb.WriteString(renderBody(body))
 	return sb.String()
 }
@@ -394,7 +394,7 @@ func renderJson(c interface{}, body []Content) string {
 // Show JsonLD next to the body content
 func renderJsonLd(c interface{}, body []Content) string {
 	var sb strings.Builder
-	sb.WriteString("```\n" + c.(JsonLdProvider).ToJsonLD() + "\n```")
+	sb.WriteString("```\n" + c.(JsonLdProvider).JsonLD() + "\n```")
 	sb.WriteString(renderBody(body))
 	return sb.String()
 }

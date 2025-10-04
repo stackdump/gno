@@ -33,11 +33,11 @@ func (l *Location) SetDescription(description string) {
 	l.Description = description
 }
 
-func (l *Location) ToAnchor() string {
+func (l *Location) Anchor() string {
 	return StringToAnchor(l.Name)
 }
 
-func (l *Location) ToMarkdown(_ ...Content) string {
+func (l *Location) Markdown(_ ...Content) string {
 	md := "### " + l.Name + "\n"
 	if l.Address != "" {
 		md += "\n [" + l.Address + "](https://www.google.com/maps/search/?api=1&query=" + url.QueryEscape(l.Address) + ")\n"
@@ -53,7 +53,7 @@ func (l *Location) ToMarkdown(_ ...Content) string {
 	return md
 }
 
-func (l *Location) ToJson() string {
+func (l *Location) Json() string {
 	json := "{\n"
 	json += "  \"Name\":\"" + l.Name + "\"\n"
 	if l.Address != "" {
@@ -68,14 +68,14 @@ func (l *Location) ToJson() string {
 	return json
 }
 
-func (l *Location) ToSVG() string {
+func (l *Location) SVG() string {
 	y := 40
-	fragment := l.ToSVGFragment(&y)
+	fragment := l.SVGFragment(&y)
 	height := ufmt.Sprintf("%d", y+20)
 	return SvgHeading("600", height) + fragment + "</svg>"
 }
 
-func (l *Location) ToSVGFragment(y *int) string {
+func (l *Location) SVGFragment(y *int) string {
 	svg := "<g class=\"location\">"
 	svg += RenderSVGLine(y, "sessiontitle", "", l.Name)
 	svg += RenderSVGLine(y, "text", "", l.Address)
@@ -85,8 +85,8 @@ func (l *Location) ToSVGFragment(y *int) string {
 	return svg
 }
 
-func (l *Location) ToSvgDataUrl() string {
-	return "data:image/svg+xml;utf8," + url.PathEscape(l.ToSVG())
+func (l *Location) SvgDataUrl() string {
+	return "data:image/svg+xml;utf8," + url.PathEscape(l.SVG())
 }
 
 func (l *Location) RenderOpts() map[string]interface{} {

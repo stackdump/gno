@@ -56,11 +56,11 @@ func (s *Session) SetCancelled(cancelled bool) {
 	s.Sequence++
 }
 
-func (s *Session) ToAnchor() string {
+func (s *Session) Anchor() string {
 	return StringToAnchor(s.Title)
 }
 
-func (s *Session) ToMarkdown(_ ...Content) string {
+func (s *Session) Markdown(_ ...Content) string {
 	duration := s.EndTime.Sub(s.StartTime)
 	markdown := "### " + s.Title + "\n\n"
 	if duration > 0 {
@@ -68,7 +68,7 @@ func (s *Session) ToMarkdown(_ ...Content) string {
 		markdown += "-> " + s.EndTime.Format(time.Kitchen)
 	}
 	if _, ok := s.RenderOpts()["Speaker"]; ok && s.Speaker != nil && s.Speaker.Name != "" {
-		markdown += " | [Speaker - " + s.Speaker.Name + "](" + s.Speaker.ToAnchor() + ")"
+		markdown += " | [Speaker - " + s.Speaker.Name + "](" + s.Speaker.Anchor() + ")"
 	}
 	if _, ok := s.RenderOpts()["Location"]; ok && s.Location != nil {
 		markdown += " | [Location - " + s.Location.Name + "](" + StringToAnchor(s.Location.Name) + ")\n"
@@ -88,7 +88,7 @@ func (s *Session) ToMarkdown(_ ...Content) string {
 	return markdown
 }
 
-func (s *Session) ToJson() string {
+func (s *Session) Json() string {
 	json := "{\n"
 	if s.Location != nil && s.Location.Name != "" {
 		json += "    \"Location\":\"" + s.Location.Name + "\",\n"
@@ -111,14 +111,14 @@ func (s *Session) ToJson() string {
 	return json
 }
 
-func (s *Session) ToSVG() string {
+func (s *Session) SVG() string {
 	y := 40
-	fragment := s.ToSVGFragment(&y)
+	fragment := s.SVGFragment(&y)
 	height := ufmt.Sprintf("%d", y+20)
 	return SvgHeading("600", height) + fragment + "</svg>"
 }
 
-func (s *Session) ToSVGFragment(y *int) string {
+func (s *Session) SVGFragment(y *int) string {
 	svg := "<g class=\"session\">"
 
 	// Left column (speaker, times, location)
@@ -156,8 +156,8 @@ func (s *Session) ToSVGFragment(y *int) string {
 	return svg
 }
 
-func (s *Session) ToSvgDataUrl() string {
-	return "data:image/svg+xml;utf8," + url.PathEscape(s.ToSVG())
+func (s *Session) SvgDataUrl() string {
+	return "data:image/svg+xml;utf8," + url.PathEscape(s.SVG())
 }
 
 func (s *Session) RenderOpts() map[string]interface{} {

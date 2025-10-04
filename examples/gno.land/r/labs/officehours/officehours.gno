@@ -67,7 +67,7 @@ func (OfficeHours) ThumbnailSvg(w, h string) string {
 // SVG returns the full SVG representation of the flyer.
 func (o OfficeHours) SVG() string {
 	var y = 28
-	body := o.Flyer().ToSVGFragment(&y)
+	body := o.Flyer().SVGFragment(&y)
 	body += `<g transform="translate(410, 52) scale(1.8)"> ` + aibLogoPath + `</g>`
 	return eve.SvgHeading("600", "200") + body + "</svg>"
 }
@@ -525,7 +525,6 @@ func showCLI(topic, date, description string) string {
 
 	sb.WriteString("#### Txlink Button (Adena Wallet) \n\n")
 	sb.WriteString("Click the button below to open Adena Wallet and prefill a transaction:\n\n")
-	sb.WriteString("EXPERIMENTAL: Adena support is still being tested (looking for feedback here).\n\n")
 	sb.WriteString(eve.Button("Post Topic  ", link))
 	sb.WriteString("\n\n[" + link + "](" + link + ")\n\n")
 	return cliCommand(topic, date, description) + "\n\n" + sb.String()

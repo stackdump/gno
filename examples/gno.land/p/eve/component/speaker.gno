@@ -33,11 +33,11 @@ func (s *Speaker) SetPictureURL(pictureURL string) {
 	s.PictureURL = pictureURL
 }
 
-func (s *Speaker) ToAnchor() string {
+func (s *Speaker) Anchor() string {
 	return StringToAnchor(s.Name)
 }
 
-func (s *Speaker) ToMarkdown(_ ...Content) string {
+func (s *Speaker) Markdown(_ ...Content) string {
 	markdown := "#### " + s.Name + "\n\n"
 	if s.Biography != "" {
 		markdown += s.Biography + "\n\n"
@@ -54,7 +54,7 @@ func (s *Speaker) ToMarkdown(_ ...Content) string {
 	return markdown
 }
 
-func (s *Speaker) ToJson() string {
+func (s *Speaker) Json() string {
 	json := "{\n"
 	json += "  \"Name\":\"" + s.Name + "\""
 
@@ -72,14 +72,14 @@ func (s *Speaker) ToJson() string {
 	return json
 }
 
-func (s *Speaker) ToSVG() string {
+func (s *Speaker) SVG() string {
 	y := 40
-	fragment := s.ToSVGFragment(&y)
+	fragment := s.SVGFragment(&y)
 	height := ufmt.Sprintf("%d", y+20)
 	return SvgHeading("600", height) + fragment + "</svg>"
 }
 
-func (s *Speaker) ToSVGFragment(y *int) string {
+func (s *Speaker) SVGFragment(y *int) string {
 	svg := "<g class=\"speaker\">"
 	svg += RenderSVGLine(y, "speaker", "", s.Name)
 	svg += RenderSVGLine(y, "text", "", s.Biography)
@@ -94,8 +94,8 @@ func (s *Speaker) ToSVGFragment(y *int) string {
 	return svg
 }
 
-func (s *Speaker) ToSvgDataUrl() string {
-	return "data:image/svg+xml;utf8," + url.PathEscape(s.ToSVG())
+func (s *Speaker) SvgDataUrl() string {
+	return "data:image/svg+xml;utf8," + url.PathEscape(s.SVG())
 }
 
 func (s *Speaker) RenderOpts() map[string]interface{} {
