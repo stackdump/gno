@@ -342,10 +342,10 @@ func renderObject(path string, obj interface{}) string {
 	sb.WriteString("\n[![svg image](" + dataUrl + ")](" + path + "&embed=img" + ")\n\n")
 
 	if isTemplate {
-		sb.WriteString("\n---\n")
+		sb.WriteString("\n\n---\n\n")
 		sb.WriteString("#### Page Preview\n")
 		sb.WriteString(tpl.Render(path))
-		sb.WriteString("\n---\n")
+		sb.WriteString("\n\n---\n\n")
 	}
 
 	links := ld.MarkdownLinks()
