@@ -89,5 +89,5 @@ var aibLogoSvg = `<svg id="` + AibLabs.Cid() + `" xmlns="http://www.w3.org/2000/
 `
 
 func (aibLabs) Render(path string) string {
-return "AIB Labs" // TODO: add body
+	return "AIB Labs" // TODO: add body
 }

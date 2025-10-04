@@ -225,5 +225,5 @@ func (EventObj) Flyer(obj ...interface{}) *eve.Flyer {
 }
 
 func (EventObj) Render(path string) string {
-    return "## Flyer\n\n {Flyer-BODY}"
+	return "## Flyer\n\n {Flyer-BODY}"
 }

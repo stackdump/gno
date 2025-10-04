@@ -1,15 +1,15 @@
 package logoverse
 
 import (
-	"net/url"
-	"strings"
 	"chain"
 	"chain/runtime"
+	"net/url"
+	"strings"
 
 	"gno.land/p/nt/ufmt"
 
-	"gno.land/p/nt/avl"
 	eve "gno.land/p/eve/event/component"
+	"gno.land/p/nt/avl"
 	"gno.land/r/labs/officehours"
 )
 
@@ -154,11 +154,11 @@ var rows = []string{
 var columns = []string{"cid", "name", "description", "committer"}
 
 func (e Record) String() string {
-    link := "?glyph="+url.QueryEscape(e.Name)
-    if _, ok := e.Object.(eve.PageTemplate); ok {
-        link = link + "&embed=page"
-    }
-	return "| [" + e.Cid[len(e.Cid)-8:] + "](?cid=" + e.Cid + ") | [" + e.Name + "]("+ link + ") | " + e.Description + " | [" + e.Committer[len(e.Committer)-8:] + "](/u/" + e.Committer + ") |\n"
+	link := "?glyph=" + url.QueryEscape(e.Name)
+	if _, ok := e.Object.(eve.PageTemplate); ok {
+		link = link + "&embed=page"
+	}
+	return "| [" + e.Cid[len(e.Cid)-8:] + "](?cid=" + e.Cid + ") | [" + e.Name + "](" + link + ") | " + e.Description + " | [" + e.Committer[len(e.Committer)-8:] + "](/u/" + e.Committer + ") |\n"
 }
 
 func Render(path string) string {
@@ -300,12 +300,12 @@ func renderObject(path string, obj interface{}) string {
 			return "![svg image](" + dataUrl + ")"
 		case "thumbnail":
 			return glyph.Thumbnail()
-	    case "page":
-            if isTemplate {
-                return renderPage(path, obj)
-            } else {
-                return "object does not implement PageTemplate"
-            }
+		case "page":
+			if isTemplate {
+				return renderPage(path, obj)
+			} else {
+				return "object does not implement PageTemplate"
+			}
 		case "name":
 			return ld.StringVal("name")
 		case "description":
@@ -342,8 +342,11 @@ func renderObject(path string, obj interface{}) string {
 	sb.WriteString("\n[![svg image](" + dataUrl + ")](" + path + "&embed=img" + ")\n\n")
 
 	if isTemplate {
-        sb.WriteString(tpl.Render(path))
-    }
+		sb.WriteString("\n---\n")
+		sb.WriteString("#### Page Preview\n")
+		sb.WriteString(tpl.Render(path))
+		sb.WriteString("\n---\n")
+	}
 
 	links := ld.MarkdownLinks()
 	if links != "" {
@@ -393,12 +396,12 @@ func capitalize(s string) string {
 }
 
 func renderPage(path string, object interface{}) string {
-    var sb strings.Builder
-    lg := object.(eve.LogoGraph)
-    d := lg.JsonLD()
-    sb.WriteString("### " + d.StringVal("name") + "\n\n")
-    sb.WriteString(lg.Thumbnail() + "\n\n")
-    cid := lg.Cid()
-    sb.WriteString(object.(eve.PageTemplate).Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)")
-    return sb.String()
+	var sb strings.Builder
+	lg := object.(eve.LogoGraph)
+	d := lg.JsonLD()
+	sb.WriteString("### " + d.StringVal("name") + "\n\n")
+	sb.WriteString(lg.Thumbnail() + "\n\n")
+	cid := lg.Cid()
+	sb.WriteString(object.(eve.PageTemplate).Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)")
+	return sb.String()
 }

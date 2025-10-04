@@ -144,18 +144,18 @@ func (g glyphObj) JsonLD() eve.JsonLDMap {
 		},
 		"name":        g.Name,
 		"description": g.Description,
-		"url": "?glyph=Glyph&embed=page",
-		"banner": "?glyph=Glyph&embed=img",
-		"thumbnail": "?glyph=Glyph&embed=thumbnail",
+		"url":         "?glyph=Glyph&embed=page",
+		"banner":      "?glyph=Glyph&embed=img",
+		"thumbnail":   "?glyph=Glyph&embed=thumbnail",
 	}
 }
 
 func (g glyphObj) Render(path string) string {
-    return Glyph.Introduction() + "\n" + Glyph.Diagram()
+	return Glyph.Introduction() + "\n" + Glyph.Diagram()
 }
 
 func (glyphObj) Diagram() string {
-return "```" + `
+	return "```" + `
 (source URL) ──► [Browser] ──► [GnoWeb: Render(path)]
                              │
                              ▼
@@ -185,9 +185,8 @@ return "```" + `
 ` + "```"
 }
 
-
 func (glyphObj) Introduction() string {
-return `
+	return `
 ## What are Glyphs?
 
 A **Glyph** is a small, portable piece of information in the Logoverse.
