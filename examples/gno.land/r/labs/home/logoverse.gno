@@ -6,6 +6,8 @@ import (
 
 type logoVerse struct {
 	parents []string
+    termset []map[string]any
+    rows    []string // CIDs of rows (snapshots)
 }
 
 var LogoverseContext = eve.JsonLDMap{
@@ -25,7 +27,11 @@ var LogoverseContext = eve.JsonLDMap{
 	},
 }
 
-var LogoVerse = logoVerse{}
+var LogoVerse = logoVerse{
+    parents: []string{},
+    termset: []map[string]any{},
+    rows:  []string{},
+}
 var _ eve.LogoGraph = LogoVerse
 var _ eve.PageTemplate = LogoVerse
 
@@ -56,37 +62,41 @@ func (logoVerse) SVG() string {
 	return AibLabs.SVG()
 }
 
-var termset []map[string]any
 
 func init() {
 	LogoVerse.snapshot() // initialize first snapshot
 }
 
-// snapshot creates a snapshot of the current rows and returns its CID.
-func (logoVerse) snapshot() string {
-	for _, cid := range rows {
-		if v, ok := registry.Get(cid); ok {
-			r := v.(Record)
-			termset = append(termset, map[string]any{
-				"@type":       "DefinedTerm",
-				"name":        r.Name,
-				"description": r.Description,
-			})
-		} else {
-			panic("unregistered cid: " + cid)
-		}
-	}
+func (lv logoVerse) Compose(o interface{}) eve.LogoGraph {
+    switch val := o.(type) {
+    case map[string]any:
+        if parents, ok := val["parents"].([]string); ok {
+            lv.parents = parents
+        }
+        if termset, ok := val["termset"].([]map[string]any); ok {
+            lv.termset = termset
+        }
+        if cid, ok := val["commit"].(string); ok {
+            lv.rows = append(lv.rows, cid)
+        }
+    default:
+        panic("invalid type for Compose")
+    }
+    return lv
+}
 
-	cid := rows[0]
-	obj, ok := registry.Get(cid)
-	if !ok {
-		panic("unregistered cid: " + cid)
-	}
-	rec := obj.(Record)
-	lg := rec.Object.(logoVerse)
-	lg.parents = []string{cid} // point to previous snapshot
-	rows[0] = Register(lg)     // register snapshot
-	return rows[0]
+// TODO: consider refactoring to use a Compose(interface{}) method
+// snapshot creates a snapshot of the current rows and returns its CID.
+func (lv logoVerse) snapshot() string {
+    return ""
+}
+
+func (logoVerse) FromPath(path string) eve.LogoGraph {
+    return LogoVerse
+}
+
+func (logoVerse) ToPath() string {
+    return "?"
 }
 
 func (lv logoVerse) JsonLD() eve.JsonLDMap {
@@ -107,7 +117,7 @@ func (lv logoVerse) JsonLD() eve.JsonLDMap {
 		"hasDefinedTerm": map[string]any{
 			"@type":          "DefinedTermSet",
 			"name":           "Logoverse Termset",
-			"hasDefinedTerm": termset,
+			"hasDefinedTerm": lv.termset,
 		},
 		"author": map[string]any{
 			"@type": "Organization",
