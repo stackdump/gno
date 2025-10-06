@@ -1,8 +1,8 @@
 package component
 
 import (
-	"unicode"
 	"strings"
+	"unicode"
 )
 
 func IsValidJson(input string) bool {

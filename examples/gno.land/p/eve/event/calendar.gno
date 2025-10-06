@@ -1,15 +1,15 @@
 package event
 
 import (
-	"net/url"
 	"chain"
 	"chain/runtime"
+	"net/url"
 	"strings"
 	"time"
 
+	eve "gno.land/p/eve/component"
 	"gno.land/p/nt/avl"
 	"gno.land/p/nt/ufmt"
-	eve "gno.land/p/eve/component"
 )
 
 // -----------------------------------------------------------------------------
@@ -491,14 +491,14 @@ var _ eve.LogoGraph = (*Schedule)(nil)
 var _ eve.Projectable = (*Schedule)(nil)
 
 func ScheduleFromEvent(evt *Event, cid string) Schedule {
-    return Schedule{
-        Status:           string(evt.Status),
-        StartDate:        evt.StartDate.Format(time.RFC3339),
-        EndDate:          evt.EndDate.Format(time.RFC3339),
-        Title:            evt.Name,
-        Description:      evt.Description,
-        EventCalendarCid: cid,
-    }
+	return Schedule{
+		Status:           string(evt.Status),
+		StartDate:        evt.StartDate.Format(time.RFC3339),
+		EndDate:          evt.EndDate.Format(time.RFC3339),
+		Title:            evt.Name,
+		Description:      evt.Description,
+		EventCalendarCid: cid,
+	}
 }
 
 type Schedule struct {
@@ -689,6 +689,6 @@ func (EventCalendar) Heading() string { return "|          |\n| -------- |\n" }
 func (EventCalendar) Row(obj EventCalendar) string {
 	cidLink := "?cal=" + obj.Cid()
 	return "| [" + obj.Thumbnail() + "](" + cidLink + ") |\n" +
-	"| 📅 ["+ obj.Title + " Calendar](" + cidLink + ")" + " |\n" +
-	"| 📄 [View Event Flyer]("+ cidLink +"&render=flyer)" + " |\n"
+		"| 📅 [" + obj.Title + " Calendar](" + cidLink + ")" + " |\n" +
+		"| 📄 [View Event Flyer](" + cidLink + "&render=flyer)" + " |\n"
 }

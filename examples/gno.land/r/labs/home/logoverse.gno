@@ -4,7 +4,9 @@ import (
 	eve "gno.land/p/eve/component"
 )
 
-type logoVerse struct{}
+type logoVerse struct {
+	parents []string
+}
 
 var LogoverseContext = eve.JsonLDMap{
 	"@version":  1.1,
@@ -57,7 +59,7 @@ func (logoVerse) SVG() string {
 var termset []map[string]any
 
 func init() {
-    LogoVerse.snapshot() // initialize first snapshot
+	LogoVerse.snapshot() // initialize first snapshot
 }
 
 // snapshot creates a snapshot of the current rows and returns its CID.
@@ -66,52 +68,53 @@ func (logoVerse) snapshot() string {
 		if v, ok := registry.Get(cid); ok {
 			r := v.(Record)
 			termset = append(termset, map[string]any{
-                "@type":       "DefinedTerm",
+				"@type":       "DefinedTerm",
 				"name":        r.Name,
 				"description": r.Description,
 			})
 		} else {
-            panic("unregistered cid: " + cid)
-        }
+			panic("unregistered cid: " + cid)
+		}
 	}
 
-    cid := rows[0]
-    obj, ok  := registry.Get(cid)
-    if !ok {
-        panic("unregistered cid: " + cid)
-    }
-    rec := obj.(Record)
-    rows[0] = Register(rec.Object) // register snapshot
-    return rows[0]
+	cid := rows[0]
+	obj, ok := registry.Get(cid)
+	if !ok {
+		panic("unregistered cid: " + cid)
+	}
+	rec := obj.(Record)
+	lg := rec.Object.(logoVerse)
+	lg.parents = []string{cid} // point to previous snapshot
+	rows[0] = Register(lg)     // register snapshot
+	return rows[0]
 }
 
-func (logoVerse) JsonLD() eve.JsonLDMap {
+func (lv logoVerse) JsonLD() eve.JsonLDMap {
 	return eve.JsonLDMap{
-		"@context":    []any{"https://schema.org", LogoverseContext},
-		"@type":       "CreativeWork",
-		"@id":         "{{CID}}",
-		"name":        "Logoverse",
-		"description": LogoVerse.Description(),
-		"url":         "?glyph=Logoverse&embed=page",
-		"image":      "?glyph=Logoverse&embed=img",
-		"thumbnailUrl":   "?glyph=Logoverse&embed=thumbnail",
+		"@context":     []any{"https://schema.org", LogoverseContext},
+		"@type":        "CreativeWork",
+		"name":         "Logoverse",
+		"description":  LogoVerse.Description(),
+		"url":          "?glyph=Logoverse&embed=page",
+		"image":        "?glyph=Logoverse&embed=img",
+		"thumbnailUrl": "?glyph=Logoverse&embed=thumbnail",
+		"@graph": map[string]any{
+			"@id":     "{{CID}}",
+			"@type":   "Glyph",
+			"parents": lv.parents,
+			"url":     "?glyph=Logoverse&embed=page",
+		},
+		"hasDefinedTerm": map[string]any{
+			"@type":          "DefinedTermSet",
+			"name":           "Logoverse Termset",
+			"hasDefinedTerm": termset,
+		},
 		"author": map[string]any{
 			"@type": "Organization",
 			"name":  "AllInBits",
 			"url":   "https://allinbits.com",
 		},
 		"license": "https://github.com/gnolang/gno/blob/master/LICENSE.md",
-		"hasPart": map[string]any{
-			"@type": "WebPage",
-			"name":  "Glyph",
-			"url":   "?glyph=Glyph",
-			"about": "Glyph is the fundamental building block of the Logoverse.",
-		},
-		"hasDefinedTerm": map[string]any{
-            "@type":   "DefinedTermSet",
-            "name":    "Logoverse Termset",
-            "hasDefinedTerm": termset,
-        },
 	}
 }
 

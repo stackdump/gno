@@ -46,13 +46,13 @@ func (aibLabs) SVG() string {
 
 func (aibLabs) JsonLD() eve.JsonLDMap {
 	return eve.JsonLDMap{
-		"@context":    "https://schema.org",
-		"@type":       "WebPage",
-		"@id":         "{{CID}}",
-		"name":        "AIB Labs",
-		"image":      "?glyph=Logoverse&embed=img",
-		"thumbnailUrl":   "?glyph=Logoverse&embed=thumbnail",
-		"description": "Working group fostering core principals: Censorship-Resistance, Sovereignty, Privacy",
+		"@context":     "https://schema.org",
+		"@type":        "WebPage",
+		"@id":          "{{CID}}",
+		"name":         "AIB Labs",
+		"image":        "?glyph=Logoverse&embed=img",
+		"thumbnailUrl": "?glyph=Logoverse&embed=thumbnail",
+		"description":  "Working group fostering core principals: Censorship-Resistance, Sovereignty, Privacy",
 		"about": eve.JsonLDMap{
 			"@type": "Organization",
 			"name":  "Experimental Blockchain Instances by All in Bits Labs group",

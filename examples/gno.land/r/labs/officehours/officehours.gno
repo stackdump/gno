@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"gno.land/p/eve/event"
 	eve "gno.land/p/eve/component"
+	"gno.land/p/eve/event"
 	"gno.land/p/moul/txlink"
 )
 
@@ -112,10 +112,10 @@ func (o OfficeHours) JsonLD() eve.JsonLDMap {
 			},
 		},
 		"about": map[string]interface{}{
-			"url":       packagePath[8:],
-			"image":    packagePath[8:] + "?embed=banner",
+			"url":          packagePath[8:],
+			"image":        packagePath[8:] + "?embed=banner",
 			"thumbnailUrl": packagePath[8:] + "?embed=thumbnail",
-			"admin":     admin,
+			"admin":        admin,
 		},
 		// REVIEW: any page with a @graph should not use representativeOfPage
 		//"representativeOfPage": true,

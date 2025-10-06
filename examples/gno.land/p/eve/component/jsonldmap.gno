@@ -10,7 +10,7 @@ type JsonLDMap map[string]interface{}
 
 // StringWithCID returns the JSON-LD string representation with the {{CID}} placeholder replaced by the actual CID.
 func (ld JsonLDMap) StringWithCID() string {
-    return strings.ReplaceAll(ld.String(), "{{CID}}", ld.Cid())
+	return strings.ReplaceAll(ld.String(), "{{CID}}", ld.Cid())
 }
 
 // String returns the JSON-LD string representation.
@@ -45,48 +45,48 @@ func (ld JsonLDMap) StringVal(key string) string {
 // FIXME: nested types get string encoded - see aiblabes .about
 
 func toJSONString(v interface{}) string {
-    switch val := v.(type) {
-    case string:
-        return `"` + val + `"`
-    case float64, float32, int, int64, int32, bool:
-        return ufmt.Sprintf("%v", val)
-    case JsonLDMap:
-        return val.String()
-    case map[string]interface{}:
-        return JsonLDMap(val).String()
-    case []map[string]interface{}:
-        s := "["
-        for i, elem := range val {
-            if i > 0 {
-                s += ", "
-            }
-            s += JsonLDMap(elem).String()
-        }
-        s += "]"
-        return s
-    case []interface{}:
-        s := "["
-        for i, elem := range val {
-            if i > 0 {
-                s += ", "
-            }
-            s += toJSONString(elem)
-        }
-        s += "]"
-        return s
-    case []string:
-        s := "["
-        for i, elem := range val {
-            if i > 0 {
-                s += ", "
-            }
-            s += `"` + elem + `"`
-        }
-        s += "]"
-        return s
-    default:
-        return `"` + ufmt.Sprintf("%v", val) + `"`
-    }
+	switch val := v.(type) {
+	case string:
+		return `"` + val + `"`
+	case float64, float32, int, int64, int32, bool:
+		return ufmt.Sprintf("%v", val)
+	case JsonLDMap:
+		return val.String()
+	case map[string]interface{}:
+		return JsonLDMap(val).String()
+	case []map[string]interface{}:
+		s := "["
+		for i, elem := range val {
+			if i > 0 {
+				s += ", "
+			}
+			s += JsonLDMap(elem).String()
+		}
+		s += "]"
+		return s
+	case []interface{}:
+		s := "["
+		for i, elem := range val {
+			if i > 0 {
+				s += ", "
+			}
+			s += toJSONString(elem)
+		}
+		s += "]"
+		return s
+	case []string:
+		s := "["
+		for i, elem := range val {
+			if i > 0 {
+				s += ", "
+			}
+			s += `"` + elem + `"`
+		}
+		s += "]"
+		return s
+	default:
+		return `"` + ufmt.Sprintf("%v", val) + `"`
+	}
 }
 
 func (ld JsonLDMap) MarkdownLinks() string {
@@ -104,10 +104,10 @@ func (ld JsonLDMap) MarkdownLinks() string {
 						urls[newPath] = "[" + urlStr + "](" + urlStr + ")"
 					}
 					if urlArr, ok := v2.([]string); ok {
-                        for i, u := range urlArr {
-                            urls[newPath+ufmt.Sprintf("[%d]", i)] = "[" + u + "](" + u + ")"
-                        }
-                    }
+						for i, u := range urlArr {
+							urls[newPath+ufmt.Sprintf("[%d]", i)] = "[" + u + "](" + u + ")"
+						}
+					}
 				} else if k == "license" {
 					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "http://") || strings.HasPrefix(licStr, "https://")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
@@ -120,11 +120,11 @@ func (ld JsonLDMap) MarkdownLinks() string {
 					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "?") || strings.HasPrefix(licStr, "/r/")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
-				} else if (k == "parentId" || k == "seal") {
+				} else if k == "parentId" || k == "seal" {
 					if str, ok := v2.(string); ok && str != "" {
-					    if IsCIDv1(str) {
-                            urls[newPath] = "[" + str + "](?cid=" + str + ")"
-                        }
+						if IsCIDv1(str) {
+							urls[newPath] = "[" + str + "](?cid=" + str + ")"
+						}
 					}
 				} else {
 					collectUrls(v2, newPath, urls)
@@ -149,30 +149,30 @@ func (ld JsonLDMap) MarkdownLinks() string {
 }
 
 func (ld JsonLDMap) TermSet() []map[string]any {
-    if v, ok := ld["hasDefinedTerm"]; ok {
-        defs := v.(map[string]interface{})
-        if terms, ok := defs["hasDefinedTerm"]; ok {
-            return terms.([]map[string]any)
-        }
-    }
-    return nil
+	if v, ok := ld["hasDefinedTerm"]; ok {
+		defs := v.(map[string]interface{})
+		if terms, ok := defs["hasDefinedTerm"]; ok {
+			return terms.([]map[string]any)
+		}
+	}
+	return nil
 }
 
 func (ld JsonLDMap) MarkdownTerms() string {
-    terms := ld.TermSet()
-    if terms == nil  {
-        return "nil"
-    }
-    if terms == nil || len(terms) == 0 {
-        return ""
-    }
-    table := "| Name | Description |\n| ---- | ----------- |\n"
-    for _, term := range terms {
-        name := toMarkdownValue(term["name"])
-        desc := toMarkdownValue(term["description"])
-        table += "| " + name + " | " + desc + " |\n"
-    }
-    return table
+	terms := ld.TermSet()
+	if terms == nil {
+		return "nil"
+	}
+	if terms == nil || len(terms) == 0 {
+		return ""
+	}
+	table := "| Name | Description |\n| ---- | ----------- |\n"
+	for _, term := range terms {
+		name := toMarkdownValue(term["name"])
+		desc := toMarkdownValue(term["description"])
+		table += "| " + name + " | " + desc + " |\n"
+	}
+	return table
 }
 
 // Helper to format value for markdown (no JSON)

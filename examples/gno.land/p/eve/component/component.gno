@@ -1,15 +1,15 @@
 package component
 
 import (
+	"chain/runtime"
 	"net/url"
 	"regexp"
-	"chain/runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"gno.land/p/nt/ufmt"
 	"gno.land/p/moul/txlink"
+	"gno.land/p/nt/ufmt"
 )
 
 // Interfaces

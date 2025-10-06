@@ -13,7 +13,7 @@ type Editable interface {
 }
 
 type PageTemplate interface {
-    Render(path string) string
+	Render(path string) string
 }
 
 type Projectable interface {

@@ -327,15 +327,20 @@ func renderObject(path string, obj interface{}) string {
 
 	sb.WriteString("#### CID\n")
 	cid := ld.Cid()
+	_, found := registry.Get(cid)
 	if proj, ok := obj.(eve.Projectable); ok {
-		if _, found := registry.Get(cid); !found {
+		if !found {
 			sb.WriteString(cid + "\n\n")
 			sb.WriteString(eve.Button("Commit Projection:    "+cid[len(cid)-8:], proj.ToPath(obj)+"&base="+glyph.Cid()+"&submit=register") + "\n")
 		} else {
 			sb.WriteString("[" + cid + "](" + proj.ToPath(obj) + ")\n")
 		}
 	} else {
-		sb.WriteString("[" + cid + "](?cid=" + cid + ")\n")
+		if !found {
+			sb.WriteString(cid + "\n\n")
+		} else {
+			sb.WriteString("[" + cid + "](?cid=" + cid + ")\n")
+		}
 	}
 
 	dataUrl := "data:image/svg+xml;utf8," + url.PathEscape(glyph.SVG())
@@ -357,9 +362,9 @@ func renderObject(path string, obj interface{}) string {
 
 	terms := ld.MarkdownTerms()
 	if terms != "" {
-        sb.WriteString("\n## Terms\n")
-        sb.WriteString(terms + "\n")
-    }
+		sb.WriteString("\n## Terms\n")
+		sb.WriteString(terms + "\n")
+	}
 
 	sb.WriteString("\n## JSON-LD\n")
 	sb.WriteString("```json\n" + strings.TrimSpace(ld.StringWithCID()) + "\n```\n")
