@@ -145,8 +145,8 @@ func (g glyphObj) JsonLD() eve.JsonLDMap {
 		"name":        g.Name,
 		"description": g.Description,
 		"url":         "?glyph=Glyph&embed=page",
-		"banner":      "?glyph=Glyph&embed=img",
-		"thumbnail":   "?glyph=Glyph&embed=thumbnail",
+		"image":      "?glyph=Glyph&embed=img",
+		"thumbnailUrl":   "?glyph=Glyph&embed=thumbnail",
 	}
 }
 

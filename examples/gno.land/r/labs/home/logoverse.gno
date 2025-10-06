@@ -66,6 +66,7 @@ func (logoVerse) snapshot() string {
 		if v, ok := registry.Get(cid); ok {
 			r := v.(Record)
 			termset = append(termset, map[string]any{
+                "@type":       "DefinedTerm",
 				"name":        r.Name,
 				"description": r.Description,
 			})
@@ -92,8 +93,8 @@ func (logoVerse) JsonLD() eve.JsonLDMap {
 		"name":        "Logoverse",
 		"description": LogoVerse.Description(),
 		"url":         "?glyph=Logoverse&embed=page",
-		"banner":      "?glyph=Logoverse&embed=img",
-		"thumbnail":   "?glyph=Logoverse&embed=thumbnail",
+		"image":      "?glyph=Logoverse&embed=img",
+		"thumbnailUrl":   "?glyph=Logoverse&embed=thumbnail",
 		"author": map[string]any{
 			"@type": "Organization",
 			"name":  "AllInBits",
@@ -106,7 +107,11 @@ func (logoVerse) JsonLD() eve.JsonLDMap {
 			"url":   "?glyph=Glyph",
 			"about": "Glyph is the fundamental building block of the Logoverse.",
 		},
-		"termset": termset,
+		"hasDefinedTerm": map[string]any{
+            "@type":   "DefinedTermSet",
+            "name":    "Logoverse Termset",
+            "hasDefinedTerm": termset,
+        },
 	}
 }
 

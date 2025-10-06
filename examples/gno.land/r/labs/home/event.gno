@@ -115,9 +115,9 @@ func (EventObj) JsonLD() eve.JsonLDMap {
 		"@type":                "WebPage",
 		"name":                 "Event",
 		"description":          descr,
-		"banner":               "?glyph=Event&embed=img",
-		"thumbnail":            "?glyph=Event&embed=thumbnail",
-		"representativeOfPage": true,
+		"image":                "?glyph=Event&embed=img",
+		"thumbnailUrl":         "?glyph=Event&embed=thumbnail",
+		"representativeOfPage": true, // REVIEW: should be true if this object implements eve.PageTemplate
 		"url":                  "/r/eve/home", // TODO: add rendering at realm path
 		"@graph": []any{
 			map[string]any{

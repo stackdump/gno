@@ -113,8 +113,8 @@ func (o OfficeHours) JsonLD() eve.JsonLDMap {
 		},
 		"about": map[string]interface{}{
 			"url":       packagePath[8:],
-			"banner":    packagePath[8:] + "?embed=banner",
-			"thumbnail": packagePath[8:] + "?embed=thumbnail",
+			"image":    packagePath[8:] + "?embed=banner",
+			"thumbnailUrl": packagePath[8:] + "?embed=thumbnail",
 			"admin":     admin,
 		},
 		// REVIEW: any page with a @graph should not use representativeOfPage

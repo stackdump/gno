@@ -112,11 +112,11 @@ func (ld JsonLDMap) MarkdownLinks() string {
 					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "http://") || strings.HasPrefix(licStr, "https://")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
-				} else if k == "thumbnail" {
+				} else if k == "thumbnailUrl" {
 					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "?") || strings.HasPrefix(licStr, "/r/")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
-				} else if k == "banner" {
+				} else if k == "image" {
 					if licStr, ok := v2.(string); ok && (strings.HasPrefix(licStr, "?") || strings.HasPrefix(licStr, "/r/")) {
 						urls[newPath] = "[" + licStr + "](" + licStr + ")"
 					}
@@ -148,19 +148,31 @@ func (ld JsonLDMap) MarkdownLinks() string {
 	return table
 }
 
+func (ld JsonLDMap) TermSet() []map[string]any {
+    if v, ok := ld["hasDefinedTerm"]; ok {
+        defs := v.(map[string]interface{})
+        if terms, ok := defs["hasDefinedTerm"]; ok {
+            return terms.([]map[string]any)
+        }
+    }
+    return nil
+}
+
 func (ld JsonLDMap) MarkdownTerms() string {
-	table := ""
-	if v, ok := ld["termset"]; ok {
-		switch ts := v.(type) {
-		case []map[string]any:
-			for _, m := range ts {
-				name, _ := m["name"].(string)
-				desc, _ := m["description"].(string)
-				table += "### " + name + "\n\n" + toMarkdownValue(desc) + "\n\n"
-			}
-		}
-	}
-	return table
+    terms := ld.TermSet()
+    if terms == nil  {
+        return "nil"
+    }
+    if terms == nil || len(terms) == 0 {
+        return ""
+    }
+    table := "| Name | Description |\n| ---- | ----------- |\n"
+    for _, term := range terms {
+        name := toMarkdownValue(term["name"])
+        desc := toMarkdownValue(term["description"])
+        table += "| " + name + " | " + desc + " |\n"
+    }
+    return table
 }
 
 // Helper to format value for markdown (no JSON)
