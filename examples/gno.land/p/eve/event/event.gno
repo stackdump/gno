@@ -197,26 +197,6 @@ func (evt *Event) Cid() string {
 	return shaToCid(sha)
 }
 
-func buildMerkleRoot(elements []string) string {
-	if len(elements) == 0 {
-		return ""
-	}
-	if len(elements) == 1 {
-		return elements[0]
-	}
-
-	var nextLevel []string
-	for i := 0; i < len(elements); i += 2 {
-		if i+1 < len(elements) {
-			combined := elements[i] + elements[i+1]
-			nextLevel = append(nextLevel, hashString(combined))
-		} else {
-			nextLevel = append(nextLevel, elements[i])
-		}
-	}
-	return buildMerkleRoot(nextLevel)
-}
-
 func hashStrings(elements ...string) string {
 	combined := ""
 	for _, e := range elements {

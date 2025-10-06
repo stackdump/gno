@@ -8,26 +8,6 @@ import (
 	"time"
 )
 
-func BuildMerkleRoot(elements []string) string {
-	if len(elements) == 0 {
-		return ""
-	}
-	if len(elements) == 1 {
-		return elements[0]
-	}
-
-	var nextLevel []string
-	for i := 0; i < len(elements); i += 2 {
-		if i+1 < len(elements) {
-			combined := elements[i] + elements[i+1]
-			nextLevel = append(nextLevel, HashString(combined))
-		} else {
-			nextLevel = append(nextLevel, elements[i])
-		}
-	}
-	return BuildMerkleRoot(nextLevel)
-}
-
 func HashStrings(elements ...string) string {
 	combined := ""
 	for _, e := range elements {

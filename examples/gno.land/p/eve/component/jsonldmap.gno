@@ -45,38 +45,48 @@ func (ld JsonLDMap) StringVal(key string) string {
 // FIXME: nested types get string encoded - see aiblabes .about
 
 func toJSONString(v interface{}) string {
-	switch val := v.(type) {
-	case string:
-		return `"` + val + `"`
-	case float64, float32, int, int64, int32, bool:
-		return ufmt.Sprintf("%v", val)
-	case JsonLDMap:
-		return val.String()
-	case map[string]interface{}:
-		return JsonLDMap(val).String()
-	case []interface{}:
-		s := "["
-		for i, elem := range val {
-			if i > 0 {
-				s += ", "
-			}
-			s += toJSONString(elem)
-		}
-		s += "]"
-		return s
-	case []string:
-		s := "["
-		for i, elem := range val {
-			if i > 0 {
-				s += ", "
-			}
-			s += `"` + elem + `"`
-		}
-		s += "]"
-		return s
-	default:
-		return `"` + ufmt.Sprintf("%v", val) + `"`
-	}
+    switch val := v.(type) {
+    case string:
+        return `"` + val + `"`
+    case float64, float32, int, int64, int32, bool:
+        return ufmt.Sprintf("%v", val)
+    case JsonLDMap:
+        return val.String()
+    case map[string]interface{}:
+        return JsonLDMap(val).String()
+    case []map[string]interface{}:
+        s := "["
+        for i, elem := range val {
+            if i > 0 {
+                s += ", "
+            }
+            s += JsonLDMap(elem).String()
+        }
+        s += "]"
+        return s
+    case []interface{}:
+        s := "["
+        for i, elem := range val {
+            if i > 0 {
+                s += ", "
+            }
+            s += toJSONString(elem)
+        }
+        s += "]"
+        return s
+    case []string:
+        s := "["
+        for i, elem := range val {
+            if i > 0 {
+                s += ", "
+            }
+            s += `"` + elem + `"`
+        }
+        s += "]"
+        return s
+    default:
+        return `"` + ufmt.Sprintf("%v", val) + `"`
+    }
 }
 
 func (ld JsonLDMap) MarkdownLinks() string {
@@ -136,4 +146,31 @@ func (ld JsonLDMap) MarkdownLinks() string {
 		table += "| " + k + " | " + v + " |\n"
 	}
 	return table
+}
+
+func (ld JsonLDMap) MarkdownTerms() string {
+	table := ""
+	if v, ok := ld["termset"]; ok {
+		switch ts := v.(type) {
+		case []map[string]any:
+			for _, m := range ts {
+				name, _ := m["name"].(string)
+				desc, _ := m["description"].(string)
+				table += "### " + name + "\n\n" + toMarkdownValue(desc) + "\n\n"
+			}
+		}
+	}
+	return table
+}
+
+// Helper to format value for markdown (no JSON)
+func toMarkdownValue(v interface{}) string {
+	switch val := v.(type) {
+	case string:
+		return val
+	case float64, float32, int, int64, int32, bool:
+		return ufmt.Sprintf("%v", val)
+	default:
+		return ufmt.Sprintf("%v", val)
+	}
 }

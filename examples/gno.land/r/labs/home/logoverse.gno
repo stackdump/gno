@@ -54,11 +54,41 @@ func (logoVerse) SVG() string {
 	return AibLabs.SVG()
 }
 
+var termset []map[string]any
+
+func init() {
+    LogoVerse.snapshot() // initialize first snapshot
+}
+
+// snapshot creates a snapshot of the current rows and returns its CID.
+func (logoVerse) snapshot() string {
+	for _, cid := range rows {
+		if v, ok := registry.Get(cid); ok {
+			r := v.(Record)
+			termset = append(termset, map[string]any{
+				"name":        r.Name,
+				"description": r.Description,
+			})
+		} else {
+            panic("unregistered cid: " + cid)
+        }
+	}
+
+    cid := rows[0]
+    obj, ok  := registry.Get(cid)
+    if !ok {
+        panic("unregistered cid: " + cid)
+    }
+    rec := obj.(Record)
+    rows[0] = Register(rec.Object) // register snapshot
+    return rows[0]
+}
+
 func (logoVerse) JsonLD() eve.JsonLDMap {
 	return eve.JsonLDMap{
 		"@context":    []any{"https://schema.org", LogoverseContext},
 		"@type":       "CreativeWork",
-		"@id":         "{{CID}}", // filled in by projection
+		"@id":         "{{CID}}",
 		"name":        "Logoverse",
 		"description": LogoVerse.Description(),
 		"url":         "?glyph=Logoverse&embed=page",
@@ -76,6 +106,7 @@ func (logoVerse) JsonLD() eve.JsonLDMap {
 			"url":   "?glyph=Glyph",
 			"about": "Glyph is the fundamental building block of the Logoverse.",
 		},
+		"termset": termset,
 	}
 }
 

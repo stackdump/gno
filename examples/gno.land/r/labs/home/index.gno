@@ -144,11 +144,11 @@ func Register(i interface{}) string {
 // registering a new object w/ the same name after deployment, should replace the old one in the table
 // but not remove the old one from the registry, so that old links still work
 var rows = []string{
+	Register(LogoVerse),
 	Register(AibLabs),
+	Register(officehours.OfficeHoursObj),
 	Register(Event),
 	Register(Glyph),
-	Register(LogoVerse),
-	Register(officehours.OfficeHoursObj),
 }
 
 var columns = []string{"cid", "name", "description", "committer"}
@@ -344,6 +344,7 @@ func renderObject(path string, obj interface{}) string {
 	if isTemplate {
 		sb.WriteString("\n\n---\n\n")
 		sb.WriteString("#### Page Preview\n")
+		sb.WriteString("[view page →](" + path + "&embed=page)" + "\n\n")
 		sb.WriteString(tpl.Render(path))
 		sb.WriteString("\n\n---\n\n")
 	}
@@ -354,7 +355,13 @@ func renderObject(path string, obj interface{}) string {
 		sb.WriteString(links + "\n")
 	}
 
-	sb.WriteString("\n#### JSON-LD\n")
+	terms := ld.MarkdownTerms()
+	if terms != "" {
+        sb.WriteString("\n## Terms\n")
+        sb.WriteString(terms + "\n")
+    }
+
+	sb.WriteString("\n## JSON-LD\n")
 	sb.WriteString("```json\n" + strings.TrimSpace(ld.StringWithCID()) + "\n```\n")
 	sb.WriteString("\n---\n\n")
 	sb.WriteString("[← index](?)\n")
