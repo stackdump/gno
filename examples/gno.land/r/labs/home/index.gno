@@ -15,6 +15,38 @@ import (
 
 var registry = avl.NewTree()
 
+type RegistryCallback = func(key string, value interface{}) bool
+type RegistryMatcher = func(value interface{}) bool
+
+func IterateRegistry(callback RegistryCallback, matcher RegistryMatcher) {
+	registry.IterateByOffset(0, registry.Size(), func(key string, value interface{}) bool {
+		if matcher(value) {
+			return callback(key, value)
+		}
+		return false
+	})
+}
+
+func TermSet() []map[string]any {
+	var terms []map[string]any
+	IterateRegistry(
+		func(key string, value interface{}) bool {
+			if rec, ok := value.(Record); ok {
+				terms = append(terms, map[string]any{
+					"name":        rec.Name,
+					"description": rec.Description,
+				})
+			}
+			return false // continue iterating
+		},
+		func(value interface{}) bool {
+			_, ok := value.(Record) // only include Records
+			return ok
+		},
+	)
+	return terms
+}
+
 type Counter struct {
 	Count int64
 }

@@ -6,8 +6,7 @@ import (
 
 type logoVerse struct {
 	parents []string
-    termset []map[string]any
-    rows    []string // CIDs of rows (snapshots)
+	rows    []string // CIDs of rows (snapshots)
 }
 
 var LogoverseContext = eve.JsonLDMap{
@@ -28,9 +27,8 @@ var LogoverseContext = eve.JsonLDMap{
 }
 
 var LogoVerse = logoVerse{
-    parents: []string{},
-    termset: []map[string]any{},
-    rows:  []string{},
+	parents: []string{},
+	rows:    []string{},
 }
 var _ eve.LogoGraph = LogoVerse
 var _ eve.PageTemplate = LogoVerse
@@ -62,43 +60,6 @@ func (logoVerse) SVG() string {
 	return AibLabs.SVG()
 }
 
-
-func init() {
-	LogoVerse.snapshot() // initialize first snapshot
-}
-
-func (lv logoVerse) Compose(o interface{}) eve.LogoGraph {
-    switch val := o.(type) {
-    case map[string]any:
-        if parents, ok := val["parents"].([]string); ok {
-            lv.parents = parents
-        }
-        if termset, ok := val["termset"].([]map[string]any); ok {
-            lv.termset = termset
-        }
-        if cid, ok := val["commit"].(string); ok {
-            lv.rows = append(lv.rows, cid)
-        }
-    default:
-        panic("invalid type for Compose")
-    }
-    return lv
-}
-
-// TODO: consider refactoring to use a Compose(interface{}) method
-// snapshot creates a snapshot of the current rows and returns its CID.
-func (lv logoVerse) snapshot() string {
-    return ""
-}
-
-func (logoVerse) FromPath(path string) eve.LogoGraph {
-    return LogoVerse
-}
-
-func (logoVerse) ToPath() string {
-    return "?"
-}
-
 func (lv logoVerse) JsonLD() eve.JsonLDMap {
 	return eve.JsonLDMap{
 		"@context":     []any{"https://schema.org", LogoverseContext},
@@ -112,12 +73,43 @@ func (lv logoVerse) JsonLD() eve.JsonLDMap {
 			"@id":     "{{CID}}",
 			"@type":   "Glyph",
 			"parents": lv.parents,
-			"url":     "?glyph=Logoverse&embed=page",
+			"url":     "?glyph=Logoverse",
 		},
 		"hasDefinedTerm": map[string]any{
-			"@type":          "DefinedTermSet",
-			"name":           "Logoverse Termset",
-			"hasDefinedTerm": lv.termset,
+			"@type": "DefinedTermSet",
+			"name":  "Logoverse Termset",
+			"hasDefinedTerm": []map[string]any{
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "Object",
+					"description": "An immutable, composable, and transparent building block with a permanent identity (CID).",
+				},
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "CID",
+					"description": "Content Identifier, a unique identifier for an object based on its content.",
+				},
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "Immutable",
+					"description": "Once created, objects never change.",
+				},
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "Composable",
+					"description": "You can link and combine objects to make new ones.",
+				},
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "Glyph",
+					"description": "A representation of an object in the Logoverse.",
+				},
+				map[string]any{
+					"@type":       "DefinedTerm",
+					"name":        "Software as a Universe",
+					"description": "The concept of creating software by minting universes of interconnected objects.",
+				},
+			},
 		},
 		"author": map[string]any{
 			"@type": "Organization",

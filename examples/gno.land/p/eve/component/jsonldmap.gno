@@ -166,13 +166,13 @@ func (ld JsonLDMap) MarkdownTerms() string {
 	if terms == nil || len(terms) == 0 {
 		return ""
 	}
-	table := "| Name | Description |\n| ---- | ----------- |\n"
+	result := ""
 	for _, term := range terms {
 		name := toMarkdownValue(term["name"])
 		desc := toMarkdownValue(term["description"])
-		table += "| " + name + " | " + desc + " |\n"
+		result += "### " + name + "\n" + desc + "\n\n"
 	}
-	return table
+	return result
 }
 
 // Helper to format value for markdown (no JSON)
@@ -188,13 +188,13 @@ func toMarkdownValue(v interface{}) string {
 }
 
 func (ld JsonLDMap) ParentCIDs() []string {
-    if v, ok := ld["@graph"]; ok {
-        graph := v.(map[string]interface{})
-        if parents, ok := graph["parents"]; ok {
-            if pArr, ok := parents.([]string); ok {
-                return pArr
-            }
-        }
-    }
-    return nil
+	if v, ok := ld["@graph"]; ok {
+		graph := v.(map[string]interface{})
+		if parents, ok := graph["parents"]; ok {
+			if pArr, ok := parents.([]string); ok {
+				return pArr
+			}
+		}
+	}
+	return nil
 }
