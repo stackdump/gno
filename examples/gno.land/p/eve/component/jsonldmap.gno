@@ -160,9 +160,6 @@ func (ld JsonLDMap) TermSet() []map[string]any {
 
 func (ld JsonLDMap) MarkdownTerms() string {
 	terms := ld.TermSet()
-	if terms == nil {
-		return "nil"
-	}
 	if terms == nil || len(terms) == 0 {
 		return ""
 	}

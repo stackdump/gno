@@ -439,6 +439,14 @@ func capitalize(s string) string {
 	return string(s[0]-32) + s[1:]
 }
 
+func committer(cid string) string {
+    if v, ok := registry.Get(cid); ok {
+        r := v.(Record)
+        return r.Committer
+    }
+    return ""
+}
+
 func renderPage(path string, object interface{}) string {
 	var sb strings.Builder
 	lg := object.(eve.LogoGraph)
@@ -446,6 +454,7 @@ func renderPage(path string, object interface{}) string {
 	sb.WriteString("### " + d.StringVal("name") + "\n\n")
 	sb.WriteString(lg.Thumbnail() + "\n\n")
 	cid := lg.Cid()
-	sb.WriteString(object.(eve.PageTemplate).Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)")
+	commit := committer(cid)
+	sb.WriteString(object.(eve.PageTemplate).Render(path) + "\n\n---\n\n" + "[← index](?) |  [" + cid[len(cid)-8:] + "](?cid=" + cid + ") | [permalink](?cid=" + cid + "&embed=page)" + " | [ /u/" + commit[len(commit)-8:] + "](/u/" + commit + ")\n")
 	return sb.String()
 }

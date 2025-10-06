@@ -6,7 +6,6 @@ import (
 
 type logoVerse struct {
 	parents []string
-	rows    []string // CIDs of rows (snapshots)
 }
 
 var LogoverseContext = eve.JsonLDMap{
@@ -28,8 +27,8 @@ var LogoverseContext = eve.JsonLDMap{
 
 var LogoVerse = logoVerse{
 	parents: []string{},
-	rows:    []string{},
 }
+
 var _ eve.LogoGraph = LogoVerse
 var _ eve.PageTemplate = LogoVerse
 
