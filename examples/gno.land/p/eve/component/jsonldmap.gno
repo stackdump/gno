@@ -186,3 +186,15 @@ func toMarkdownValue(v interface{}) string {
 		return ufmt.Sprintf("%v", val)
 	}
 }
+
+func (ld JsonLDMap) ParentCIDs() []string {
+    if v, ok := ld["@graph"]; ok {
+        graph := v.(map[string]interface{})
+        if parents, ok := graph["parents"]; ok {
+            if pArr, ok := parents.([]string); ok {
+                return pArr
+            }
+        }
+    }
+    return nil
+}
