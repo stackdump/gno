@@ -153,7 +153,7 @@ func (b Blog) RenderRSS(res *mux.ResponseWriter, _ *mux.Request) {
 	// Iterate through posts in reverse chronological order
 	b.PostsPublished.ReverseIterate("", "", func(key string, value any) bool {
 		post := value.(*Post)
-		
+
 		res.Write("    <item>\n")
 		res.Write(ufmt.Sprintf("      <title>%s</title>\n", escapeXML(post.Title)))
 		res.Write(ufmt.Sprintf("      <link>https://%s%s</link>\n", domain, post.URL()))
@@ -161,7 +161,7 @@ func (b Blog) RenderRSS(res *mux.ResponseWriter, _ *mux.Request) {
 		res.Write(ufmt.Sprintf("      <pubDate>%s</pubDate>\n", post.CreatedAt.Format(time.RFC1123Z)))
 		res.Write(ufmt.Sprintf("      <description>%s</description>\n", escapeXML(post.Summary())))
 		res.Write("    </item>\n")
-		
+
 		return false
 	})
 
