@@ -145,9 +145,9 @@ func (b Blog) RenderRSS(res *mux.ResponseWriter, _ *mux.Request) {
 	res.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 	res.Write("<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n")
 	res.Write("  <channel>\n")
-	res.Write(ufmt.Sprintf("    <title>%s</title>\n", b.Title))
+	res.Write(ufmt.Sprintf("    <title>%s</title>\n", escapeXML(b.Title)))
 	res.Write(ufmt.Sprintf("    <link>https://%s%s</link>\n", domain, b.Prefix))
-	res.Write(ufmt.Sprintf("    <description>%s</description>\n", b.Title))
+	res.Write(ufmt.Sprintf("    <description>%s</description>\n", escapeXML(b.Title)))
 	res.Write(ufmt.Sprintf("    <atom:link href=\"https://%s%srss\" rel=\"self\" type=\"application/rss+xml\" />\n", domain, b.Prefix))
 
 	// Iterate through posts in reverse chronological order
