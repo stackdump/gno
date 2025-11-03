@@ -9,6 +9,7 @@ import (
 var b = &blog.Blog{
 	Title:  "gno.land's blog",
 	Prefix: "/r/gnoland/blog:",
+	Domain: "gno.land",
 }
 
 func AddComment(_ realm, postSlug, comment string) {

@@ -13,6 +13,7 @@ import (
 type Blog struct {
 	Title             string
 	Prefix            string   // i.e. r/gnoland/blog:
+	Domain            string   // i.e. gno.land or tens.city
 	Posts             avl.Tree // slug -> *Post
 	PostsPublished    avl.Tree // published-date -> *Post
 	PostsAlphabetical avl.Tree // title -> *Post
@@ -134,11 +135,46 @@ func (b Blog) RenderTag(res *mux.ResponseWriter, req *mux.Request) {
 	}
 }
 
+func (b Blog) RenderRSS(res *mux.ResponseWriter, _ *mux.Request) {
+	// Use domain if available, otherwise fallback to prefix
+	domain := b.Domain
+	if domain == "" {
+		domain = "localhost"
+	}
+
+	res.Write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	res.Write("<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n")
+	res.Write("  <channel>\n")
+	res.Write(ufmt.Sprintf("    <title>%s</title>\n", b.Title))
+	res.Write(ufmt.Sprintf("    <link>https://%s%s</link>\n", domain, b.Prefix))
+	res.Write(ufmt.Sprintf("    <description>%s</description>\n", b.Title))
+	res.Write(ufmt.Sprintf("    <atom:link href=\"https://%s%srss\" rel=\"self\" type=\"application/rss+xml\" />\n", domain, b.Prefix))
+
+	// Iterate through posts in reverse chronological order
+	b.PostsPublished.ReverseIterate("", "", func(key string, value any) bool {
+		post := value.(*Post)
+		
+		res.Write("    <item>\n")
+		res.Write(ufmt.Sprintf("      <title>%s</title>\n", escapeXML(post.Title)))
+		res.Write(ufmt.Sprintf("      <link>https://%s%s</link>\n", domain, post.URL()))
+		res.Write(ufmt.Sprintf("      <guid>https://%s%s</guid>\n", domain, post.URL()))
+		res.Write(ufmt.Sprintf("      <pubDate>%s</pubDate>\n", post.CreatedAt.Format(time.RFC1123Z)))
+		res.Write(ufmt.Sprintf("      <description>%s</description>\n", escapeXML(post.Summary())))
+		res.Write("    </item>\n")
+		
+		return false
+	})
+
+	res.Write("  </channel>\n")
+	res.Write("</rss>")
+}
+
 func (b Blog) Render(path string) string {
 	router := mux.NewRouter()
 	router.HandleFunc("", b.RenderHome)
 	router.HandleFunc("p/{slug}", b.RenderPost)
 	router.HandleFunc("t/{slug}", b.RenderTag)
+	router.HandleFunc("rss", b.RenderRSS)
 	return router.Render(path)
 }
 

@@ -9,6 +9,7 @@ import (
 var b = &blog.Blog{
 	Title:        "Gnoland's Pages",
 	Prefix:       "/r/gnoland/pages:",
+	Domain:       "gno.land",
 	NoBreadcrumb: true,
 }
 
